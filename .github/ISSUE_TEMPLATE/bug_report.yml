@@ -1,0 +1,33 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! **Do not include real personal data** – use synthetic identifiers.
+        Security vulnerabilities must be reported privately (see SECURITY.md), not here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Steps to reproduce, expected and actual behaviour.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Web dashboard, API, Source adapter, Correlation / scoring, AI analyst, Reports, Deployment / Docker, Documentation, Other]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      placeholder: "0.1.0 or commit SHA"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (redact secrets and personal data)
+      render: shell

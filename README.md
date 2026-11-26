@@ -2,6 +2,12 @@
 
 **Open-source intelligence. Connected evidence. Verifiable insights.**
 
+[![CI](https://github.com/codesphere-u/atlas-osint/actions/workflows/ci.yml/badge.svg)](https://github.com/codesphere-u/atlas-osint/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/codesphere-u/atlas-osint/actions/workflows/codeql.yml/badge.svg)](https://github.com/codesphere-u/atlas-osint/actions/workflows/codeql.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
+![Next.js 15](https://img.shields.io/badge/Next.js-15-black)
+
 ATLAS OSINT is a self-hosted platform for **lawful, authorised** open-source intelligence work. It takes a public
 identifier (phone number, username, name, email address, domain/URL/IP, organisation or public document),
 queries a transparent set of legitimate public sources, and turns the results into **evidence-backed,
@@ -13,6 +19,17 @@ a rule-based confidence score with the reasons behind it, and a verification sta
 > contains technical controls that make it a poor one (see [Responsible use](#responsible-use)).
 
 ![Investigation results](docs/screenshots/results.png)
+
+<table>
+<tr>
+<td><img src="docs/screenshots/graph-organization.png" alt="Entity relationship graph" /></td>
+<td><img src="docs/screenshots/report.png" alt="Analysis and report exports" /></td>
+</tr>
+<tr>
+<td align="center">Entity graph – namesakes kept separate, inference shown dashed</td>
+<td align="center">Analysis &amp; exports (PDF, HTML, JSON, CSV)</td>
+</tr>
+</table>
 
 ## What it does
 
@@ -52,7 +69,7 @@ method, authentication, rate limit, licence, fields and reliability grade. New s
 ## Quick start (Docker)
 
 ```bash
-git clone https://github.com/<your-account>/atlas-osint.git
+git clone https://github.com/codesphere-u/atlas-osint.git
 ```
 
 ```bash
@@ -126,6 +143,12 @@ docs/           architecture, methodology, security audit, coverage, deployment,
 | [Test results](docs/test-results.md) | What is tested, results, entity-resolution metrics |
 | [Feature status](IMPLEMENTATION_STATUS.md) · [Tasks](TASKS.md) | Honest implementation status per requirement |
 | [Limitations & roadmap](docs/limitations-and-roadmap.md) | Known gaps and planned work |
+
+## Contributing
+
+Contributions are welcome – especially new **legitimate** source adapters. Read [CONTRIBUTING.md](CONTRIBUTING.md)
+and the [Code of Conduct](CODE_OF_CONDUCT.md) (it includes a strict no-misuse rule). Report vulnerabilities privately
+via [GitHub security advisories](https://github.com/codesphere-u/atlas-osint/security/advisories/new).
 
 ## Responsible use
 

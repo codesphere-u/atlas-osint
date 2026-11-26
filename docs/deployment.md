@@ -23,7 +23,7 @@
 ## Install
 
 ```bash
-git clone https://github.com/<your-account>/atlas-osint.git && cd atlas-osint && cp .env.example .env
+git clone https://github.com/codesphere-u/atlas-osint.git && cd atlas-osint && cp .env.example .env
 ```
 
 ```bash

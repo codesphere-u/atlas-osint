@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / use case
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy and misuse considerations
+      description: How could this be misused against individuals, and how should that be prevented?

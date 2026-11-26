@@ -1,0 +1,36 @@
+name: New source request
+description: Propose a public information source for a new adapter
+labels: [source-adapter, enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ATLAS only integrates **legitimate public sources**: official APIs, public registries, licensed datasets or
+        websites whose terms permit automated access. Requests for breached data, password-reset probing, private
+        data or scraping against terms of service will be closed.
+  - type: input
+    id: source
+    attributes:
+      label: Source name and documentation URL
+    validations:
+      required: true
+  - type: dropdown
+    id: inputs
+    attributes:
+      label: Input types
+      multiple: true
+      options: [phone, username, name, email, domain, url, ip, organization, document]
+    validations:
+      required: true
+  - type: textarea
+    id: legal
+    attributes:
+      label: Access, authentication, rate limits, licence and terms of use
+    validations:
+      required: true
+  - type: textarea
+    id: fields
+    attributes:
+      label: Data fields it would provide, and why they are needed (data minimisation)
+    validations:
+      required: true
