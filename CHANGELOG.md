@@ -23,4 +23,4 @@ and the project uses [Semantic Versioning](https://semver.org/).
   rate limiting, security headers, SSRF protection with DNS pinning.
 - Next.js dashboard with 15 pages including entity graph, evidence timeline, source management and administration.
 - Docker Compose deployment (PostgreSQL, Redis, Celery worker/beat, Caddy TLS), GitHub Actions CI.
-- 170+ automated tests and a synthetic entity-resolution benchmark.
+- 172 automated tests and a synthetic entity-resolution benchmark.

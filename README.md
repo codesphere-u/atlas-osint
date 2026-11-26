@@ -91,7 +91,7 @@ The web app runs on <http://localhost:3000> and proxies `/api` to the API on por
 execution by default; no Redis needed for development).
 
 ```bash
-pytest                      # 170+ offline tests (HTTP and DNS are mocked)
+pytest                      # 172 offline tests (HTTP and DNS are mocked)
 pytest -m live              # optional checks against real public sources
 ruff check . && mypy && bandit -c pyproject.toml -r shared engine modules integrations workers apps/api
 cd apps/web && npm run typecheck && npm run lint && npm test && npm run build

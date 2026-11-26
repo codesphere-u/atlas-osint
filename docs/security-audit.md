@@ -2,7 +2,7 @@
 
 Scope: ATLAS OSINT 0.1.0 – backend, engine, adapters, AI layer, web app, Docker deployment. Method: threat
 modelling (STRIDE + misuse cases), manual code review of security-relevant paths, automated tests
-(`tests/security/`, 80+ tests), static analysis (Bandit, Ruff security rules, mypy), dependency audits
+(`tests/security/`, 68 tests), static analysis (Bandit, Ruff security rules, mypy), dependency audits
 (`pip-audit`, `npm audit`) and an end-to-end run of the Docker Compose stack. Performed by the authors – **this is
 not an independent third-party penetration test**; one is recommended before high-risk deployments.
 
