@@ -1,0 +1,12 @@
+{
+  "articles": [
+    {
+      "url": "https://news.example.test/a1",
+      "title": "Maria Example wins synthetic prize",
+      "seendate": "20260301T101500Z",
+      "domain": "news.example.test",
+      "language": "English",
+      "sourcecountry": "United States"
+    }
+  ]
+}

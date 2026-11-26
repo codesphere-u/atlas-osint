@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "issuer_name": "C=US, O=DigiCert Inc, CN=DigiCert Global G2 TLS RSA SHA256 2020 CA1",
+    "name_value": "example.com\nwww.example.com",
+    "not_before": "2024-01-30T00:00:00",
+    "not_after": "2025-03-01T23:59:59"
+  },
+  {
+    "id": 2,
+    "issuer_name": "C=US, O=Let's Encrypt, CN=R3",
+    "name_value": "*.example.com\napi.example.com",
+    "not_before": "2019-05-01T00:00:00",
+    "not_after": "2019-08-01T00:00:00"
+  },
+  {
+    "id": 3,
+    "issuer_name": "C=US, O=DigiCert Inc, CN=DigiCert TLS",
+    "name_value": "dev.example.com",
+    "not_before": "2021-02-02T00:00:00",
+    "not_after": "2022-02-02T00:00:00"
+  }
+]

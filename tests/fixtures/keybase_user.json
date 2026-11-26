@@ -1,0 +1,31 @@
+{
+  "status": {
+    "code": 0
+  },
+  "them": [
+    {
+      "id": "kb0001",
+      "basics": {
+        "username": "octo-sample"
+      },
+      "profile": {
+        "full_name": "Octo Sample",
+        "bio": "keys"
+      },
+      "proofs_summary": {
+        "all": [
+          {
+            "proof_type": "github",
+            "nametag": "octo-sample",
+            "proof_url": "https://gist.github.com/octo-sample/1"
+          },
+          {
+            "proof_type": "dns",
+            "nametag": "octo.example.org",
+            "proof_url": "dns://octo.example.org"
+          }
+        ]
+      }
+    }
+  ]
+}

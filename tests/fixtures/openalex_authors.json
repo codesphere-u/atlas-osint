@@ -1,0 +1,43 @@
+{
+  "results": [
+    {
+      "id": "https://openalex.org/A0000000001",
+      "display_name": "Maria Example",
+      "orcid": "https://orcid.org/0000-0002-1825-0097",
+      "works_count": 42,
+      "cited_by_count": 900,
+      "last_known_institutions": [
+        {
+          "display_name": "University of Synthetica"
+        }
+      ],
+      "topics": [
+        {
+          "display_name": "Graph theory"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/A0000000002",
+      "display_name": "Maria Example",
+      "orcid": null,
+      "works_count": 3,
+      "cited_by_count": 2,
+      "last_known_institutions": [
+        {
+          "display_name": "Institute of Fictional Studies"
+        }
+      ],
+      "topics": []
+    },
+    {
+      "id": "https://openalex.org/A0000000003",
+      "display_name": "M\u00e1ria Ex\u00e1mple-Smith",
+      "orcid": null,
+      "works_count": 11,
+      "cited_by_count": 40,
+      "last_known_institutions": [],
+      "topics": []
+    }
+  ]
+}

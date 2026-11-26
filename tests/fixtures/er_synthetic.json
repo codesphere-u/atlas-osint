@@ -1,0 +1,1555 @@
+{
+ "seed": 20261126,
+ "records": [
+  {
+   "truth_id": "P0",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Chen",
+   "hint": "person:orcid:0000-1453-4165-3828",
+   "orcid": "0000-1453-4165-3828"
+  },
+  {
+   "truth_id": "P1",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Chen",
+   "hint": "person:openalex:A1",
+   "orcid": null
+  },
+  {
+   "truth_id": "P2",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Example",
+   "hint": "person:orcid:0000-9648-5406-4027",
+   "orcid": "0000-9648-5406-4027"
+  },
+  {
+   "truth_id": "P2",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Wei Example",
+   "hint": "person:orcid:0000-9648-5406-4027",
+   "orcid": "0000-9648-5406-4027"
+  },
+  {
+   "truth_id": "P3",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:orcid:0000-5699-7616-8072",
+   "orcid": "0000-5699-7616-8072"
+  },
+  {
+   "truth_id": "P3",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:orcid:0000-5699-7616-8072",
+   "orcid": "0000-5699-7616-8072"
+  },
+  {
+   "truth_id": "P4",
+   "source": "openalex",
+   "kind": "person",
+   "name": "John Chen",
+   "hint": "person:orcid:0000-4971-7695-6914",
+   "orcid": "0000-4971-7695-6914"
+  },
+  {
+   "truth_id": "P4",
+   "source": "orcid",
+   "kind": "person",
+   "name": "John Chen",
+   "hint": "person:orcid:0000-4971-7695-6914",
+   "orcid": "0000-4971-7695-6914"
+  },
+  {
+   "truth_id": "P5",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Aiko Sample",
+   "hint": "person:openalex:A5",
+   "orcid": null
+  },
+  {
+   "truth_id": "P5",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Aiko Sample",
+   "hint": "person:wikidata:Q5",
+   "orcid": null
+  },
+  {
+   "truth_id": "P6",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Chen",
+   "hint": "person:orcid:0000-7275-6864-1069",
+   "orcid": "0000-7275-6864-1069"
+  },
+  {
+   "truth_id": "P6",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Wei Chen",
+   "hint": "person:orcid:0000-7275-6864-1069",
+   "orcid": "0000-7275-6864-1069"
+  },
+  {
+   "truth_id": "P7",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Aiko Chen",
+   "hint": "person:orcid:0000-1249-0009-7080",
+   "orcid": "0000-1249-0009-7080"
+  },
+  {
+   "truth_id": "P8",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Haddad",
+   "hint": "person:orcid:0000-7745-4005-8840",
+   "orcid": "0000-7745-4005-8840"
+  },
+  {
+   "truth_id": "P9",
+   "source": "openalex",
+   "kind": "person",
+   "name": "John Tanaka",
+   "hint": "person:orcid:0000-6721-5179-8390",
+   "orcid": "0000-6721-5179-8390"
+  },
+  {
+   "truth_id": "P10",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Aiko Haddad",
+   "hint": "person:openalex:A10",
+   "orcid": null
+  },
+  {
+   "truth_id": "P11",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Priya Example",
+   "hint": "person:orcid:0000-2748-3824-6743",
+   "orcid": "0000-2748-3824-6743"
+  },
+  {
+   "truth_id": "P11",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Priya Example",
+   "hint": "person:orcid:0000-2748-3824-6743",
+   "orcid": "0000-2748-3824-6743"
+  },
+  {
+   "truth_id": "P11",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Priya Example",
+   "hint": "person:wikidata:Q11",
+   "orcid": "0000-2748-3824-6743"
+  },
+  {
+   "truth_id": "P12",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Fatima Sample",
+   "hint": "person:orcid:0000-8476-2593-6330",
+   "orcid": "0000-8476-2593-6330"
+  },
+  {
+   "truth_id": "P12",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Fatima Sample",
+   "hint": "person:orcid:0000-8476-2593-6330",
+   "orcid": "0000-8476-2593-6330"
+  },
+  {
+   "truth_id": "P13",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Maria Example",
+   "hint": "person:orcid:0000-0072-9171-4766",
+   "orcid": "0000-0072-9171-4766"
+  },
+  {
+   "truth_id": "P14",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Aiko Haddad",
+   "hint": "person:orcid:0000-3097-1598-7992",
+   "orcid": "0000-3097-1598-7992"
+  },
+  {
+   "truth_id": "P15",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:orcid:0000-3347-1912-0407",
+   "orcid": "0000-3347-1912-0407"
+  },
+  {
+   "truth_id": "P16",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Priya Tanaka",
+   "hint": "person:orcid:0000-3405-6915-0148",
+   "orcid": "0000-3405-6915-0148"
+  },
+  {
+   "truth_id": "P17",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Priya Example",
+   "hint": "person:orcid:0000-0833-4721-9111",
+   "orcid": "0000-0833-4721-9111"
+  },
+  {
+   "truth_id": "P17",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Priya Example",
+   "hint": "person:orcid:0000-0833-4721-9111",
+   "orcid": "0000-0833-4721-9111"
+  },
+  {
+   "truth_id": "P17",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Priya Example",
+   "hint": "person:wikidata:Q17",
+   "orcid": null
+  },
+  {
+   "truth_id": "P18",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Tanaka",
+   "hint": "person:openalex:A18",
+   "orcid": null
+  },
+  {
+   "truth_id": "P19",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:openalex:A19",
+   "orcid": null
+  },
+  {
+   "truth_id": "P20",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:orcid:0000-7902-6180-0989",
+   "orcid": "0000-7902-6180-0989"
+  },
+  {
+   "truth_id": "P20",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:orcid:0000-7902-6180-0989",
+   "orcid": "0000-7902-6180-0989"
+  },
+  {
+   "truth_id": "P21",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:orcid:0000-7547-4118-1878",
+   "orcid": "0000-7547-4118-1878"
+  },
+  {
+   "truth_id": "P21",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:wikidata:Q21",
+   "orcid": "0000-7547-4118-1878"
+  },
+  {
+   "truth_id": "P22",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Sample",
+   "hint": "person:orcid:0000-7617-3004-7145",
+   "orcid": "0000-7617-3004-7145"
+  },
+  {
+   "truth_id": "P22",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Diego Sample",
+   "hint": "person:orcid:0000-7617-3004-7145",
+   "orcid": "0000-7617-3004-7145"
+  },
+  {
+   "truth_id": "P22",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Diego Sample",
+   "hint": "person:wikidata:Q22",
+   "orcid": "0000-7617-3004-7145"
+  },
+  {
+   "truth_id": "P23",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Haddad",
+   "hint": "person:openalex:A23",
+   "orcid": null
+  },
+  {
+   "truth_id": "P24",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Example",
+   "hint": "person:orcid:0000-5479-1264-2072",
+   "orcid": "0000-5479-1264-2072"
+  },
+  {
+   "truth_id": "P24",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Lars Example",
+   "hint": "person:orcid:0000-5479-1264-2072",
+   "orcid": "0000-5479-1264-2072"
+  },
+  {
+   "truth_id": "P25",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Sample",
+   "hint": "person:orcid:0000-8161-8989-8851",
+   "orcid": "0000-8161-8989-8851"
+  },
+  {
+   "truth_id": "P25",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Wei Sample",
+   "hint": "person:orcid:0000-8161-8989-8851",
+   "orcid": "0000-8161-8989-8851"
+  },
+  {
+   "truth_id": "P26",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Maria Example",
+   "hint": "person:orcid:0000-4404-7573-4803",
+   "orcid": "0000-4404-7573-4803"
+  },
+  {
+   "truth_id": "P27",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Aiko Chen",
+   "hint": "person:openalex:A27",
+   "orcid": null
+  },
+  {
+   "truth_id": "P28",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Tanaka",
+   "hint": "person:orcid:0000-1294-5488-5102",
+   "orcid": "0000-1294-5488-5102"
+  },
+  {
+   "truth_id": "P28",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Diego Tanaka",
+   "hint": "person:orcid:0000-1294-5488-5102",
+   "orcid": "0000-1294-5488-5102"
+  },
+  {
+   "truth_id": "P28",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Diego Tanaka",
+   "hint": "person:wikidata:Q28",
+   "orcid": null
+  },
+  {
+   "truth_id": "P29",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Example",
+   "hint": "person:orcid:0000-4980-4382-8454",
+   "orcid": "0000-4980-4382-8454"
+  },
+  {
+   "truth_id": "P29",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Diego Example",
+   "hint": "person:orcid:0000-4980-4382-8454",
+   "orcid": "0000-4980-4382-8454"
+  },
+  {
+   "truth_id": "P30",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Fatima Chen",
+   "hint": "person:orcid:0000-7573-9357-4603",
+   "orcid": "0000-7573-9357-4603"
+  },
+  {
+   "truth_id": "P30",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Fatima Chen",
+   "hint": "person:orcid:0000-7573-9357-4603",
+   "orcid": "0000-7573-9357-4603"
+  },
+  {
+   "truth_id": "P31",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Haddad",
+   "hint": "person:orcid:0000-1993-3404-3003",
+   "orcid": "0000-1993-3404-3003"
+  },
+  {
+   "truth_id": "P31",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Wei Haddad",
+   "hint": "person:orcid:0000-1993-3404-3003",
+   "orcid": "0000-1993-3404-3003"
+  },
+  {
+   "truth_id": "P32",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Priya Sample",
+   "hint": "person:orcid:0000-8361-5587-3859",
+   "orcid": "0000-8361-5587-3859"
+  },
+  {
+   "truth_id": "P32",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Priya Sample",
+   "hint": "person:orcid:0000-8361-5587-3859",
+   "orcid": "0000-8361-5587-3859"
+  },
+  {
+   "truth_id": "P33",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:orcid:0000-8445-2882-8573",
+   "orcid": "0000-8445-2882-8573"
+  },
+  {
+   "truth_id": "P33",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:orcid:0000-8445-2882-8573",
+   "orcid": "0000-8445-2882-8573"
+  },
+  {
+   "truth_id": "P34",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Example",
+   "hint": "person:openalex:A34",
+   "orcid": null
+  },
+  {
+   "truth_id": "P35",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Aiko Haddad",
+   "hint": "person:openalex:A35",
+   "orcid": null
+  },
+  {
+   "truth_id": "P36",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Maria Haddad",
+   "hint": "person:openalex:A36",
+   "orcid": null
+  },
+  {
+   "truth_id": "P37",
+   "source": "openalex",
+   "kind": "person",
+   "name": "John Haddad",
+   "hint": "person:orcid:0000-0594-0491-6988",
+   "orcid": "0000-0594-0491-6988"
+  },
+  {
+   "truth_id": "P37",
+   "source": "orcid",
+   "kind": "person",
+   "name": "John Haddad",
+   "hint": "person:orcid:0000-0594-0491-6988",
+   "orcid": "0000-0594-0491-6988"
+  },
+  {
+   "truth_id": "P38",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Fatima Example",
+   "hint": "person:orcid:0000-5342-8601-0059",
+   "orcid": "0000-5342-8601-0059"
+  },
+  {
+   "truth_id": "P39",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Priya Tanaka",
+   "hint": "person:orcid:0000-6823-0746-7508",
+   "orcid": "0000-6823-0746-7508"
+  },
+  {
+   "truth_id": "P39",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Priya Tanaka",
+   "hint": "person:orcid:0000-6823-0746-7508",
+   "orcid": "0000-6823-0746-7508"
+  },
+  {
+   "truth_id": "P40",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Example",
+   "hint": "person:orcid:0000-2189-7600-0308",
+   "orcid": "0000-2189-7600-0308"
+  },
+  {
+   "truth_id": "P40",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Wei Example",
+   "hint": "person:orcid:0000-2189-7600-0308",
+   "orcid": "0000-2189-7600-0308"
+  },
+  {
+   "truth_id": "P40",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Wei Example",
+   "hint": "person:wikidata:Q40",
+   "orcid": "0000-2189-7600-0308"
+  },
+  {
+   "truth_id": "P41",
+   "source": "openalex",
+   "kind": "person",
+   "name": "John Example",
+   "hint": "person:openalex:A41",
+   "orcid": null
+  },
+  {
+   "truth_id": "P42",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Tanaka",
+   "hint": "person:orcid:0000-3349-2899-2637",
+   "orcid": "0000-3349-2899-2637"
+  },
+  {
+   "truth_id": "P42",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Diego Tanaka",
+   "hint": "person:orcid:0000-3349-2899-2637",
+   "orcid": "0000-3349-2899-2637"
+  },
+  {
+   "truth_id": "P42",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Diego Tanaka",
+   "hint": "person:wikidata:Q42",
+   "orcid": null
+  },
+  {
+   "truth_id": "P43",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Aiko Sample",
+   "hint": "person:openalex:A43",
+   "orcid": null
+  },
+  {
+   "truth_id": "P44",
+   "source": "openalex",
+   "kind": "person",
+   "name": "John Tanaka",
+   "hint": "person:orcid:0000-4626-1935-3490",
+   "orcid": "0000-4626-1935-3490"
+  },
+  {
+   "truth_id": "P44",
+   "source": "orcid",
+   "kind": "person",
+   "name": "John Tanaka",
+   "hint": "person:orcid:0000-4626-1935-3490",
+   "orcid": "0000-4626-1935-3490"
+  },
+  {
+   "truth_id": "P45",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Priya Haddad",
+   "hint": "person:orcid:0000-5827-2766-5197",
+   "orcid": "0000-5827-2766-5197"
+  },
+  {
+   "truth_id": "P45",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Priya Haddad",
+   "hint": "person:orcid:0000-5827-2766-5197",
+   "orcid": "0000-5827-2766-5197"
+  },
+  {
+   "truth_id": "P46",
+   "source": "openalex",
+   "kind": "person",
+   "name": "John Sample",
+   "hint": "person:orcid:0000-0301-2327-9360",
+   "orcid": "0000-0301-2327-9360"
+  },
+  {
+   "truth_id": "P47",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Fatima Example",
+   "hint": "person:orcid:0000-5595-4325-3126",
+   "orcid": "0000-5595-4325-3126"
+  },
+  {
+   "truth_id": "P48",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Chen",
+   "hint": "person:orcid:0000-7952-4858-7758",
+   "orcid": "0000-7952-4858-7758"
+  },
+  {
+   "truth_id": "P49",
+   "source": "openalex",
+   "kind": "person",
+   "name": "John Sample",
+   "hint": "person:orcid:0000-8977-3405-3793",
+   "orcid": "0000-8977-3405-3793"
+  },
+  {
+   "truth_id": "P49",
+   "source": "orcid",
+   "kind": "person",
+   "name": "John Sample",
+   "hint": "person:orcid:0000-8977-3405-3793",
+   "orcid": "0000-8977-3405-3793"
+  },
+  {
+   "truth_id": "P50",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Example",
+   "hint": "person:orcid:0000-5011-6939-1296",
+   "orcid": "0000-5011-6939-1296"
+  },
+  {
+   "truth_id": "P50",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Diego Example",
+   "hint": "person:orcid:0000-5011-6939-1296",
+   "orcid": "0000-5011-6939-1296"
+  },
+  {
+   "truth_id": "P50",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Diego Example",
+   "hint": "person:wikidata:Q50",
+   "orcid": "0000-5011-6939-1296"
+  },
+  {
+   "truth_id": "P51",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Maria Sample",
+   "hint": "person:orcid:0000-3016-1263-8707",
+   "orcid": "0000-3016-1263-8707"
+  },
+  {
+   "truth_id": "P51",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Maria Sample",
+   "hint": "person:orcid:0000-3016-1263-8707",
+   "orcid": "0000-3016-1263-8707"
+  },
+  {
+   "truth_id": "P51",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Maria Sample",
+   "hint": "person:wikidata:Q51",
+   "orcid": null
+  },
+  {
+   "truth_id": "P52",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Chen",
+   "hint": "person:orcid:0000-2840-9270-5812",
+   "orcid": "0000-2840-9270-5812"
+  },
+  {
+   "truth_id": "P52",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Wei Chen",
+   "hint": "person:orcid:0000-2840-9270-5812",
+   "orcid": "0000-2840-9270-5812"
+  },
+  {
+   "truth_id": "P53",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Haddad",
+   "hint": "person:orcid:0000-7683-8072-5046",
+   "orcid": "0000-7683-8072-5046"
+  },
+  {
+   "truth_id": "P53",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Wei Haddad",
+   "hint": "person:orcid:0000-7683-8072-5046",
+   "orcid": "0000-7683-8072-5046"
+  },
+  {
+   "truth_id": "P53",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Wei Haddad",
+   "hint": "person:wikidata:Q53",
+   "orcid": "0000-7683-8072-5046"
+  },
+  {
+   "truth_id": "P54",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Tanaka",
+   "hint": "person:orcid:0000-1795-3243-3153",
+   "orcid": "0000-1795-3243-3153"
+  },
+  {
+   "truth_id": "P54",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Lars Tanaka",
+   "hint": "person:orcid:0000-1795-3243-3153",
+   "orcid": "0000-1795-3243-3153"
+  },
+  {
+   "truth_id": "P55",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Example",
+   "hint": "person:openalex:A55",
+   "orcid": null
+  },
+  {
+   "truth_id": "P56",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Priya Tanaka",
+   "hint": "person:orcid:0000-8858-3780-6095",
+   "orcid": "0000-8858-3780-6095"
+  },
+  {
+   "truth_id": "P57",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Aiko Example",
+   "hint": "person:openalex:A57",
+   "orcid": null
+  },
+  {
+   "truth_id": "P58",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Example",
+   "hint": "person:orcid:0000-8266-9321-9039",
+   "orcid": "0000-8266-9321-9039"
+  },
+  {
+   "truth_id": "P59",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Fatima Tanaka",
+   "hint": "person:orcid:0000-1256-1359-0438",
+   "orcid": "0000-1256-1359-0438"
+  },
+  {
+   "truth_id": "P59",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Fatima Tanaka",
+   "hint": "person:orcid:0000-1256-1359-0438",
+   "orcid": "0000-1256-1359-0438"
+  },
+  {
+   "truth_id": "P60",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Maria Tanaka",
+   "hint": "person:orcid:0000-5754-1872-6957",
+   "orcid": "0000-5754-1872-6957"
+  },
+  {
+   "truth_id": "P60",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Maria Tanaka",
+   "hint": "person:orcid:0000-5754-1872-6957",
+   "orcid": "0000-5754-1872-6957"
+  },
+  {
+   "truth_id": "P61",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Fatima Haddad",
+   "hint": "person:orcid:0000-8034-8595-3429",
+   "orcid": "0000-8034-8595-3429"
+  },
+  {
+   "truth_id": "P62",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Sample",
+   "hint": "person:orcid:0000-5248-5792-3743",
+   "orcid": "0000-5248-5792-3743"
+  },
+  {
+   "truth_id": "P63",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Priya Sample",
+   "hint": "person:openalex:A63",
+   "orcid": null
+  },
+  {
+   "truth_id": "P64",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Fatima Sample",
+   "hint": "person:openalex:A64",
+   "orcid": null
+  },
+  {
+   "truth_id": "P65",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Sample",
+   "hint": "person:orcid:0000-9893-7459-6447",
+   "orcid": "0000-9893-7459-6447"
+  },
+  {
+   "truth_id": "P65",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Lars Sample",
+   "hint": "person:orcid:0000-9893-7459-6447",
+   "orcid": "0000-9893-7459-6447"
+  },
+  {
+   "truth_id": "P65",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Lars Sample",
+   "hint": "person:wikidata:Q65",
+   "orcid": null
+  },
+  {
+   "truth_id": "P66",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:orcid:0000-2575-2671-0014",
+   "orcid": "0000-2575-2671-0014"
+  },
+  {
+   "truth_id": "P66",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:orcid:0000-2575-2671-0014",
+   "orcid": "0000-2575-2671-0014"
+  },
+  {
+   "truth_id": "P66",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Lars Chen",
+   "hint": "person:wikidata:Q66",
+   "orcid": "0000-2575-2671-0014"
+  },
+  {
+   "truth_id": "P67",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Maria Example",
+   "hint": "person:openalex:A67",
+   "orcid": null
+  },
+  {
+   "truth_id": "P68",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Sample",
+   "hint": "person:openalex:A68",
+   "orcid": null
+  },
+  {
+   "truth_id": "P69",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Aiko Chen",
+   "hint": "person:openalex:A69",
+   "orcid": null
+  },
+  {
+   "truth_id": "P69",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Aiko Chen",
+   "hint": "person:wikidata:Q69",
+   "orcid": null
+  },
+  {
+   "truth_id": "P70",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Example",
+   "hint": "person:orcid:0000-0139-0736-9336",
+   "orcid": "0000-0139-0736-9336"
+  },
+  {
+   "truth_id": "P70",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Lars Example",
+   "hint": "person:orcid:0000-0139-0736-9336",
+   "orcid": "0000-0139-0736-9336"
+  },
+  {
+   "truth_id": "P71",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Example",
+   "hint": "person:orcid:0000-3615-5845-7939",
+   "orcid": "0000-3615-5845-7939"
+  },
+  {
+   "truth_id": "P72",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Priya Chen",
+   "hint": "person:openalex:A72",
+   "orcid": null
+  },
+  {
+   "truth_id": "P73",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Fatima Tanaka",
+   "hint": "person:orcid:0000-8285-8506-0354",
+   "orcid": "0000-8285-8506-0354"
+  },
+  {
+   "truth_id": "P73",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Fatima Tanaka",
+   "hint": "person:orcid:0000-8285-8506-0354",
+   "orcid": "0000-8285-8506-0354"
+  },
+  {
+   "truth_id": "P73",
+   "source": "wikidata",
+   "kind": "person",
+   "name": "Fatima Tanaka",
+   "hint": "person:wikidata:Q73",
+   "orcid": "0000-8285-8506-0354"
+  },
+  {
+   "truth_id": "P74",
+   "source": "openalex",
+   "kind": "person",
+   "name": "John Tanaka",
+   "hint": "person:orcid:0000-2822-7926-9209",
+   "orcid": "0000-2822-7926-9209"
+  },
+  {
+   "truth_id": "P74",
+   "source": "orcid",
+   "kind": "person",
+   "name": "John Tanaka",
+   "hint": "person:orcid:0000-2822-7926-9209",
+   "orcid": "0000-2822-7926-9209"
+  },
+  {
+   "truth_id": "P75",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Chen",
+   "hint": "person:orcid:0000-0350-5659-0398",
+   "orcid": "0000-0350-5659-0398"
+  },
+  {
+   "truth_id": "P76",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Lars Tanaka",
+   "hint": "person:openalex:A76",
+   "orcid": null
+  },
+  {
+   "truth_id": "P77",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Priya Example",
+   "hint": "person:openalex:A77",
+   "orcid": null
+  },
+  {
+   "truth_id": "P78",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Diego Tanaka",
+   "hint": "person:orcid:0000-7145-9286-2992",
+   "orcid": "0000-7145-9286-2992"
+  },
+  {
+   "truth_id": "P78",
+   "source": "orcid",
+   "kind": "person",
+   "name": "Diego Tanaka",
+   "hint": "person:orcid:0000-7145-9286-2992",
+   "orcid": "0000-7145-9286-2992"
+  },
+  {
+   "truth_id": "P79",
+   "source": "openalex",
+   "kind": "person",
+   "name": "Wei Tanaka",
+   "hint": "person:openalex:A79",
+   "orcid": null
+  },
+  {
+   "truth_id": "A0",
+   "source": "devto",
+   "kind": "account",
+   "handle": "quill2",
+   "hint": "account:devto:quill2",
+   "profile_url": "https://devto.example/quill2",
+   "links": []
+  },
+  {
+   "truth_id": "A0",
+   "source": "github",
+   "kind": "account",
+   "handle": "quill2",
+   "hint": "account:github:quill2",
+   "profile_url": "https://github.example/quill2",
+   "links": []
+  },
+  {
+   "truth_id": "A1",
+   "source": "devto",
+   "kind": "account",
+   "handle": "atlas1",
+   "hint": "account:devto:atlas1",
+   "profile_url": "https://devto.example/atlas1",
+   "links": []
+  },
+  {
+   "truth_id": "A2",
+   "source": "github",
+   "kind": "account",
+   "handle": "quill3",
+   "hint": "account:github:quill3",
+   "profile_url": "https://github.example/quill3",
+   "links": []
+  },
+  {
+   "truth_id": "A3",
+   "source": "devto",
+   "kind": "account",
+   "handle": "nova3",
+   "hint": "account:devto:nova3",
+   "profile_url": "https://devto.example/nova3",
+   "links": []
+  },
+  {
+   "truth_id": "A3",
+   "source": "gitlab",
+   "kind": "account",
+   "handle": "nova3",
+   "hint": "account:gitlab:nova3",
+   "profile_url": "https://gitlab.example/nova3",
+   "links": [
+    "https://devto.example/nova3"
+   ]
+  },
+  {
+   "truth_id": "A5",
+   "source": "gitlab",
+   "kind": "account",
+   "handle": "octo4",
+   "hint": "account:gitlab:octo4",
+   "profile_url": "https://gitlab.example/octo4",
+   "links": []
+  },
+  {
+   "truth_id": "A6",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "octo1",
+   "hint": "account:codeberg:octo1",
+   "profile_url": "https://codeberg.example/octo1",
+   "links": []
+  },
+  {
+   "truth_id": "A7",
+   "source": "gitlab",
+   "kind": "account",
+   "handle": "atlas2",
+   "hint": "account:gitlab:atlas2",
+   "profile_url": "https://gitlab.example/atlas2",
+   "links": []
+  },
+  {
+   "truth_id": "A7",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "atlas2",
+   "hint": "account:codeberg:atlas2",
+   "profile_url": "https://codeberg.example/atlas2",
+   "links": [
+    "https://gitlab.example/atlas2"
+   ]
+  },
+  {
+   "truth_id": "A7",
+   "source": "github",
+   "kind": "account",
+   "handle": "atlas2",
+   "hint": "account:github:atlas2",
+   "profile_url": "https://github.example/atlas2",
+   "links": [
+    "https://gitlab.example/atlas2"
+   ]
+  },
+  {
+   "truth_id": "A8",
+   "source": "gitlab",
+   "kind": "account",
+   "handle": "pixel1",
+   "hint": "account:gitlab:pixel1",
+   "profile_url": "https://gitlab.example/pixel1",
+   "links": []
+  },
+  {
+   "truth_id": "A9",
+   "source": "github",
+   "kind": "account",
+   "handle": "pixel4",
+   "hint": "account:github:pixel4",
+   "profile_url": "https://github.example/pixel4",
+   "links": []
+  },
+  {
+   "truth_id": "A10",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "ember4",
+   "hint": "account:codeberg:ember4",
+   "profile_url": "https://codeberg.example/ember4",
+   "links": []
+  },
+  {
+   "truth_id": "A10",
+   "source": "gitlab",
+   "kind": "account",
+   "handle": "ember4",
+   "hint": "account:gitlab:ember4",
+   "profile_url": "https://gitlab.example/ember4",
+   "links": [
+    "https://codeberg.example/ember4"
+   ]
+  },
+  {
+   "truth_id": "A11",
+   "source": "github",
+   "kind": "account",
+   "handle": "octo2",
+   "hint": "account:github:octo2",
+   "profile_url": "https://github.example/octo2",
+   "links": []
+  },
+  {
+   "truth_id": "A11",
+   "source": "devto",
+   "kind": "account",
+   "handle": "octo2",
+   "hint": "account:devto:octo2",
+   "profile_url": "https://devto.example/octo2",
+   "links": [
+    "https://github.example/octo2"
+   ]
+  },
+  {
+   "truth_id": "A12",
+   "source": "github",
+   "kind": "account",
+   "handle": "octo3",
+   "hint": "account:github:octo3",
+   "profile_url": "https://github.example/octo3",
+   "links": []
+  },
+  {
+   "truth_id": "A13",
+   "source": "github",
+   "kind": "account",
+   "handle": "nova2",
+   "hint": "account:github:nova2",
+   "profile_url": "https://github.example/nova2",
+   "links": []
+  },
+  {
+   "truth_id": "A14",
+   "source": "github",
+   "kind": "account",
+   "handle": "ember4",
+   "hint": "account:github:ember4",
+   "profile_url": "https://github.example/ember4",
+   "links": []
+  },
+  {
+   "truth_id": "A15",
+   "source": "github",
+   "kind": "account",
+   "handle": "pixel3",
+   "hint": "account:github:pixel3",
+   "profile_url": "https://github.example/pixel3",
+   "links": []
+  },
+  {
+   "truth_id": "A15",
+   "source": "gitlab",
+   "kind": "account",
+   "handle": "pixel3",
+   "hint": "account:gitlab:pixel3",
+   "profile_url": "https://gitlab.example/pixel3",
+   "links": []
+  },
+  {
+   "truth_id": "A16",
+   "source": "devto",
+   "kind": "account",
+   "handle": "ember4",
+   "hint": "account:devto:ember4",
+   "profile_url": "https://devto.example/ember4",
+   "links": []
+  },
+  {
+   "truth_id": "A17",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "atlas4",
+   "hint": "account:codeberg:atlas4",
+   "profile_url": "https://codeberg.example/atlas4",
+   "links": []
+  },
+  {
+   "truth_id": "A17",
+   "source": "devto",
+   "kind": "account",
+   "handle": "atlas4",
+   "hint": "account:devto:atlas4",
+   "profile_url": "https://devto.example/atlas4",
+   "links": [
+    "https://codeberg.example/atlas4"
+   ]
+  },
+  {
+   "truth_id": "A18",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "ember2",
+   "hint": "account:codeberg:ember2",
+   "profile_url": "https://codeberg.example/ember2",
+   "links": []
+  },
+  {
+   "truth_id": "A20",
+   "source": "gitlab",
+   "kind": "account",
+   "handle": "quill3",
+   "hint": "account:gitlab:quill3",
+   "profile_url": "https://gitlab.example/quill3",
+   "links": []
+  },
+  {
+   "truth_id": "A21",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "octo2",
+   "hint": "account:codeberg:octo2",
+   "profile_url": "https://codeberg.example/octo2",
+   "links": []
+  },
+  {
+   "truth_id": "A21",
+   "source": "gitlab",
+   "kind": "account",
+   "handle": "octo2",
+   "hint": "account:gitlab:octo2",
+   "profile_url": "https://gitlab.example/octo2",
+   "links": []
+  },
+  {
+   "truth_id": "A22",
+   "source": "devto",
+   "kind": "account",
+   "handle": "octo3",
+   "hint": "account:devto:octo3",
+   "profile_url": "https://devto.example/octo3",
+   "links": []
+  },
+  {
+   "truth_id": "A22",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "octo3",
+   "hint": "account:codeberg:octo3",
+   "profile_url": "https://codeberg.example/octo3",
+   "links": []
+  },
+  {
+   "truth_id": "A24",
+   "source": "devto",
+   "kind": "account",
+   "handle": "atlas2",
+   "hint": "account:devto:atlas2",
+   "profile_url": "https://devto.example/atlas2",
+   "links": []
+  },
+  {
+   "truth_id": "A25",
+   "source": "devto",
+   "kind": "account",
+   "handle": "pixel4",
+   "hint": "account:devto:pixel4",
+   "profile_url": "https://devto.example/pixel4",
+   "links": []
+  },
+  {
+   "truth_id": "A26",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "quill1",
+   "hint": "account:codeberg:quill1",
+   "profile_url": "https://codeberg.example/quill1",
+   "links": []
+  },
+  {
+   "truth_id": "A26",
+   "source": "github",
+   "kind": "account",
+   "handle": "quill1",
+   "hint": "account:github:quill1",
+   "profile_url": "https://github.example/quill1",
+   "links": [
+    "https://codeberg.example/quill1"
+   ]
+  },
+  {
+   "truth_id": "A27",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "pixel1",
+   "hint": "account:codeberg:pixel1",
+   "profile_url": "https://codeberg.example/pixel1",
+   "links": []
+  },
+  {
+   "truth_id": "A28",
+   "source": "github",
+   "kind": "account",
+   "handle": "atlas3",
+   "hint": "account:github:atlas3",
+   "profile_url": "https://github.example/atlas3",
+   "links": []
+  },
+  {
+   "truth_id": "A28",
+   "source": "devto",
+   "kind": "account",
+   "handle": "atlas3",
+   "hint": "account:devto:atlas3",
+   "profile_url": "https://devto.example/atlas3",
+   "links": [
+    "https://github.example/atlas3"
+   ]
+  },
+  {
+   "truth_id": "A28",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "atlas3",
+   "hint": "account:codeberg:atlas3",
+   "profile_url": "https://codeberg.example/atlas3",
+   "links": [
+    "https://github.example/atlas3"
+   ]
+  },
+  {
+   "truth_id": "A31",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "ember1",
+   "hint": "account:codeberg:ember1",
+   "profile_url": "https://codeberg.example/ember1",
+   "links": []
+  },
+  {
+   "truth_id": "A31",
+   "source": "gitlab",
+   "kind": "account",
+   "handle": "ember1",
+   "hint": "account:gitlab:ember1",
+   "profile_url": "https://gitlab.example/ember1",
+   "links": [
+    "https://codeberg.example/ember1"
+   ]
+  },
+  {
+   "truth_id": "A32",
+   "source": "github",
+   "kind": "account",
+   "handle": "pixel1",
+   "hint": "account:github:pixel1",
+   "profile_url": "https://github.example/pixel1",
+   "links": []
+  },
+  {
+   "truth_id": "A33",
+   "source": "devto",
+   "kind": "account",
+   "handle": "pixel2",
+   "hint": "account:devto:pixel2",
+   "profile_url": "https://devto.example/pixel2",
+   "links": []
+  },
+  {
+   "truth_id": "A33",
+   "source": "gitlab",
+   "kind": "account",
+   "handle": "pixel2",
+   "hint": "account:gitlab:pixel2",
+   "profile_url": "https://gitlab.example/pixel2",
+   "links": [
+    "https://devto.example/pixel2"
+   ]
+  },
+  {
+   "truth_id": "A33",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "pixel2",
+   "hint": "account:codeberg:pixel2",
+   "profile_url": "https://codeberg.example/pixel2",
+   "links": []
+  },
+  {
+   "truth_id": "A34",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "nova3",
+   "hint": "account:codeberg:nova3",
+   "profile_url": "https://codeberg.example/nova3",
+   "links": []
+  },
+  {
+   "truth_id": "A36",
+   "source": "github",
+   "kind": "account",
+   "handle": "atlas1",
+   "hint": "account:github:atlas1",
+   "profile_url": "https://github.example/atlas1",
+   "links": []
+  },
+  {
+   "truth_id": "A37",
+   "source": "codeberg",
+   "kind": "account",
+   "handle": "quill3",
+   "hint": "account:codeberg:quill3",
+   "profile_url": "https://codeberg.example/quill3",
+   "links": []
+  },
+  {
+   "truth_id": "A38",
+   "source": "devto",
+   "kind": "account",
+   "handle": "quill1",
+   "hint": "account:devto:quill1",
+   "profile_url": "https://devto.example/quill1",
+   "links": []
+  },
+  {
+   "truth_id": "A38",
+   "source": "gitlab",
+   "kind": "account",
+   "handle": "quill1",
+   "hint": "account:gitlab:quill1",
+   "profile_url": "https://gitlab.example/quill1",
+   "links": [
+    "https://devto.example/quill1"
+   ]
+  },
+  {
+   "truth_id": "A39",
+   "source": "github",
+   "kind": "account",
+   "handle": "octo4",
+   "hint": "account:github:octo4",
+   "profile_url": "https://github.example/octo4",
+   "links": []
+  },
+  {
+   "truth_id": "A39",
+   "source": "devto",
+   "kind": "account",
+   "handle": "octo4",
+   "hint": "account:devto:octo4",
+   "profile_url": "https://devto.example/octo4",
+   "links": [
+    "https://github.example/octo4"
+   ]
+  }
+ ]
+}

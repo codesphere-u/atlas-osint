@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "Q900001": {
+      "labels": {
+        "en": {
+          "value": "Maria Example"
+        }
+      },
+      "descriptions": {
+        "en": {
+          "value": "synthetic mathematician"
+        }
+      },
+      "claims": {
+        "P31": [
+          {
+            "mainsnak": {
+              "datavalue": {
+                "value": {
+                  "id": "Q5"
+                }
+              }
+            }
+          }
+        ],
+        "P496": [
+          {
+            "mainsnak": {
+              "datavalue": {
+                "value": "0000-0002-1825-0097"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "Q900002": {
+      "labels": {
+        "en": {
+          "value": "Maria Example"
+        }
+      },
+      "descriptions": {
+        "en": {
+          "value": "synthetic painter"
+        }
+      },
+      "claims": {
+        "P31": [
+          {
+            "mainsnak": {
+              "datavalue": {
+                "value": {
+                  "id": "Q5"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "Q900003": {
+      "labels": {
+        "en": {
+          "value": "Example Corp"
+        }
+      },
+      "descriptions": {
+        "en": {
+          "value": "synthetic company"
+        }
+      },
+      "claims": {
+        "P31": [
+          {
+            "mainsnak": {
+              "datavalue": {
+                "value": {
+                  "id": "Q4830453"
+                }
+              }
+            }
+          }
+        ],
+        "P571": [
+          {
+            "mainsnak": {
+              "datavalue": {
+                "value": {
+                  "time": "+1999-01-01T00:00:00Z"
+                }
+              }
+            }
+          }
+        ],
+        "P1278": [
+          {
+            "mainsnak": {
+              "datavalue": {
+                "value": "5493001KJTIIGC8Y1R12"
+              }
+            }
+          }
+        ],
+        "P856": [
+          {
+            "mainsnak": {
+              "datavalue": {
+                "value": "https://example-corp.test"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

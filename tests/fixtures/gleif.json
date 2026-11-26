@@ -1,0 +1,41 @@
+{
+  "data": [
+    {
+      "id": "5493001KJTIIGC8Y1R12",
+      "attributes": {
+        "entity": {
+          "legalName": {
+            "name": "Example Corp"
+          },
+          "jurisdiction": "US-DE",
+          "legalForm": {
+            "id": "XTIQ"
+          },
+          "status": "ACTIVE",
+          "legalAddress": {
+            "country": "US",
+            "city": "Wilmington"
+          },
+          "creationDate": "1998-12-31T00:00:00Z"
+        }
+      }
+    },
+    {
+      "id": "5493009999999999ZZ99",
+      "attributes": {
+        "entity": {
+          "legalName": {
+            "name": "Example Corp Holdings Ltd"
+          },
+          "jurisdiction": "GB",
+          "status": "ACTIVE",
+          "legalAddress": {
+            "country": "GB",
+            "city": "London"
+          },
+          "creationDate": "2010-05-05T00:00:00Z"
+        }
+      }
+    }
+  ]
+}

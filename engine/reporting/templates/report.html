@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:;">
+<meta name="referrer" content="no-referrer">
+<title>ATLAS OSINT report {{ r.report_id }}</title>
+<style>
+  :root { --bg:#0b1020; --panel:#121a2e; --line:#24304d; --text:#e6ebf5; --muted:#93a0bd; --ok:#34d399; --warn:#fbbf24; --bad:#f87171; --acc:#60a5fa; }
+  @media print { :root { --bg:#fff; --panel:#fff; --line:#ccc; --text:#111; --muted:#555; } }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 24px; margin: 0 0 4px; } h2 { font-size: 17px; margin: 32px 0 10px; border-bottom:1px solid var(--line); padding-bottom:6px; }
+  .muted { color: var(--muted); } .tag { font-size:11px; padding:1px 7px; border-radius:99px; border:1px solid var(--line); white-space:nowrap; }
+  .high { color: var(--ok); border-color: var(--ok); } .medium { color: var(--acc); border-color: var(--acc); }
+  .low { color: var(--warn); border-color: var(--warn); } .very_low { color: var(--bad); border-color: var(--bad); }
+  .card { background: var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:8px 0; }
+  .card h3 { margin: 0 0 4px; font-size: 14px; }
+  table { width:100%; border-collapse: collapse; font-size: 13px; } th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align: top; }
+  dl { display:grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; } dt { color: var(--muted); }
+  a { color: var(--acc); word-break: break-all; } code { font-size: 12px; }
+  .banner { border:1px solid var(--warn); color: var(--warn); padding: 8px 12px; border-radius: 6px; margin: 12px 0; }
+</style>
+</head>
+<body><main>
+<header>
+  <h1>ATLAS OSINT — Intelligence Report</h1>
+  <div class="muted">Report {{ r.report_id }} · generated {{ r.generated_at.strftime("%Y-%m-%d %H:%M UTC") }} by {{ r.generated_by }}</div>
+  <div class="muted">Open-source intelligence. Connected evidence. Verifiable insights.</div>
+</header>
+
+<h2>1. Investigation scope</h2>
+<dl>
+  <dt>Title</dt><dd>{{ r.investigation.title }}</dd>
+  <dt>Subject</dt><dd>{{ r.investigation.subject_display }}</dd>
+  <dt>Subject kind</dt><dd>{{ r.investigation.subject_kind }}</dd>
+  <dt>Purpose</dt><dd>{{ r.investigation.purpose }}</dd>
+  <dt>Legal basis</dt><dd>{{ r.investigation.legal_basis }}</dd>
+  <dt>Authorisation ref.</dt><dd>{{ r.investigation.authorization_reference or "—" }}</dd>
+  <dt>Consent recorded</dt><dd>{{ "yes" if r.investigation.consent_obtained else "no" }}</dd>
+  <dt>Authorised domains</dt><dd>{{ r.investigation.authorized_domains or "—" }}</dd>
+</dl>
+
+<h2>2. Collection period</h2>
+<dl>
+  <dt>Started</dt><dd>{{ r.investigation.collection_started_at or "—" }}</dd>
+  <dt>Finished</dt><dd>{{ r.investigation.collection_finished_at or "—" }}</dd>
+  <dt>Sources consulted</dt><dd>{{ r.coverage.sources_consulted }} ({{ r.coverage.sources_answered }} answered)</dd>
+</dl>
+
+{% if r.analysis %}
+<h2>3. Summary</h2>
+{% if r.analysis.ai_generated %}<div class="banner">Includes AI-generated narrative ({{ r.analysis.provider }} / {{ r.analysis.model }}). Statements were validated against cited findings; analyst review is required.</div>{% endif %}
+<p style="white-space:pre-line">{{ r.analysis.summary }}</p>
+{% if r.analysis.insufficient_evidence %}<ul>{% for i in r.analysis.insufficient_evidence %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
+{% endif %}
+
+{% macro finding_card(f) %}
+<div class="card">
+  <h3>{{ f.title }} <span class="tag {{ f.confidence.level.value if f.confidence else '' }}">{{ "%.2f"|format(f.confidence.score) if f.confidence else "–" }} {{ f.confidence.level.value if f.confidence else "" }}</span>
+  <span class="tag">{{ f.verification_status.value }}</span> <span class="tag">{{ f.match_type.value }}</span> <span class="tag">{{ f.evidence_kind.value }}</span></h3>
+  <div>{{ f.description }}</div>
+  {% if f.evidence.excerpt %}<div class="muted">“{{ f.evidence.excerpt }}”</div>{% endif %}
+  <div class="muted" style="font-size:12px;margin-top:4px">
+    Source: {{ f.source_display_name }} (reliability {{ f.reliability.value }}) · <a href="{{ f.source_url if f.source_url.startswith('http') else '#' }}" rel="noopener noreferrer nofollow">{{ f.source_url }}</a><br>
+    Collected {{ f.collected_at.strftime("%Y-%m-%d %H:%M UTC") }}{% if f.published_at %} · published {{ f.published_at.strftime("%Y-%m-%d") }}{% endif %}{% if f.evidence.content_hash %} · sha256 <code>{{ f.evidence.content_hash[:16] }}…</code>{% endif %} · ID <code>{{ f.id }}</code>
+  </div>
+</div>
+{% endmacro %}
+
+<h2>4. Verified findings ({{ r.verified|length }})</h2>
+{% for f in r.verified %}{{ finding_card(f) }}{% else %}<p class="muted">None.</p>{% endfor %}
+
+<h2>5. Possible matches ({{ r.possible|length }})</h2>
+{% for f in r.possible %}{{ finding_card(f) }}{% else %}<p class="muted">None.</p>{% endfor %}
+
+<h2>6. Unverified / insufficient evidence ({{ r.unverified|length }})</h2>
+{% for f in r.unverified %}{{ finding_card(f) }}{% else %}<p class="muted">None.</p>{% endfor %}
+
+<h2>7. Contradictions and name collisions</h2>
+{% for c in r.correlation.contradictions %}<div class="card">{{ c.explanation }}</div>{% endfor %}
+{% for n in r.correlation.name_collisions %}<div class="card">{{ n.explanation }}</div>{% endfor %}
+{% if not r.correlation.contradictions and not r.correlation.name_collisions %}<p class="muted">None detected.</p>{% endif %}
+
+<h2>8. Relationships</h2>
+<table><thead><tr><th>From</th><th>Relation</th><th>To</th><th>Evidence</th><th>Confidence</th></tr></thead><tbody>
+{% for rel in r.correlation.relationships %}
+<tr><td>{{ entities[rel.source_entity_id].label }}</td><td>{{ rel.type }}</td><td>{{ entities[rel.target_entity_id].label }}</td><td>{{ rel.evidence_kind.value }}</td><td>{{ "%.2f"|format(rel.confidence) }}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">None.</td></tr>{% endfor %}
+</tbody></table>
+
+{% if r.analysis and r.analysis.timeline %}
+<h2>9. Timeline</h2>
+<table><thead><tr><th>Date</th><th>Event</th><th>Source</th><th>Status</th></tr></thead><tbody>
+{% for e in r.analysis.timeline %}<tr><td>{{ e.date }}</td><td>{{ e.label }}</td><td>{{ e.source }}</td><td>{{ e.category }}</td></tr>{% endfor %}
+</tbody></table>
+{% endif %}
+
+<h2>10. Sources consulted</h2>
+<table><thead><tr><th>Source</th><th>Queried</th><th>Status</th><th>Findings</th><th>Notes</th></tr></thead><tbody>
+{% for run in r.coverage.runs %}<tr><td>{{ run.display_name }}</td><td><code>{{ run.identifier }}</code></td><td>{{ run.status }}</td><td>{{ run.findings }}</td><td class="muted">{{ run.message or "" }}</td></tr>{% endfor %}
+</tbody></table>
+
+<h2>11. Confidence methodology</h2>
+<ul>{% for m in r.methodology %}<li>{{ m }}</li>{% endfor %}</ul>
+
+<h2>12. Coverage limitations</h2>
+<ul>{% for l in r.limitations %}<li>{{ l }}</li>{% endfor %}</ul>
+
+<h2>13. Analyst notes</h2>
+{% for n in r.analyst_notes %}<div class="card"><div class="muted">{{ n.created_at }} · {{ n.author }}{% if n.finding_id %} · finding <code>{{ n.finding_id }}</code>{% endif %}</div>{{ n.body }}</div>{% else %}<p class="muted">None.</p>{% endfor %}
+
+{% if r.analysis %}<p class="muted" style="margin-top:32px">{{ r.analysis.disclaimer }}</p>{% endif %}
+</main></body></html>

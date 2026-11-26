@@ -1,0 +1,39 @@
+{
+  "example.com|A": [
+    "93.184.216.34"
+  ],
+  "example.com|AAAA": [
+    "2606:2800:220:1:248:1893:25c8:1946"
+  ],
+  "example.com|MX": [
+    "10 mx1.example-mail.test.",
+    "20 mx2.example-mail.test."
+  ],
+  "example.com|NS": [
+    "a.iana-servers.net.",
+    "b.iana-servers.net."
+  ],
+  "example.com|TXT": [
+    "v=spf1 -all",
+    "google-site-verification=SYNTHETICTOKEN123"
+  ],
+  "_dmarc.example.com|TXT": [
+    "v=DMARC1; p=reject; rua=mailto:dmarc@example.com"
+  ],
+  "34.216.184.93.origin.asn.cymru.com|TXT": [
+    "15133 | 93.184.216.0/24 | US | ripencc | 2008-06-02"
+  ],
+  "AS15133.asn.cymru.com|TXT": [
+    "15133 | US | arin | 2007-03-19 | EDGECAST - SYNTHETIC CDN, US"
+  ],
+  "acme-research.test|MX": [
+    "10 aspmx.l.google.com."
+  ],
+  "acme-research.test|TXT": [
+    "v=spf1 include:_spf.google.com ~all"
+  ],
+  "_dmarc.acme-research.test|TXT": [],
+  "acme-research.test|A": [
+    "93.184.216.34"
+  ]
+}

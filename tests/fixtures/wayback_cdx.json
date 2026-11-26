@@ -1,0 +1,12 @@
+[
+  [
+    "timestamp",
+    "original",
+    "statuscode"
+  ],
+  [
+    "20020120142510",
+    "http://example.com:80/",
+    "200"
+  ]
+]

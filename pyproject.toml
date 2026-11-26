@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atlas-osint"
+version = "0.1.0"
+description = "ATLAS OSINT: open-source intelligence. Connected evidence. Verifiable insights."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.11"
+authors = [{ name = "ATLAS OSINT contributors" }]
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "sqlalchemy>=2.0.30",
+  "alembic>=1.13",
+  "psycopg[binary]>=3.1",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.3",
+  "httpx>=0.27",
+  "dnspython>=2.6",
+  "phonenumbers>=8.13",
+  "email-validator>=2.1",
+  "redis>=5.0",
+  "celery>=5.4",
+  "pyjwt>=2.8",
+  "argon2-cffi>=23.1",
+  "cryptography>=42",
+  "jinja2>=3.1",
+  "fpdf2>=2.7",
+  "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+ai = ["anthropic>=2.0"]
+dev = [
+  "pytest>=8",
+  "pytest-asyncio>=0.23",
+  "respx>=0.21",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "bandit>=1.7",
+  "pip-audit>=2.7",
+  "anthropic>=2.0",
+]
+
+[project.scripts]
+atlas = "atlas_api.cli:main"
+
+# Third-party source adapters register themselves under this entry-point group.
+[project.entry-points."atlas_osint.sources"]
+
+[tool.setuptools.packages.find]
+where = [".", "apps/api"]
+include = ["shared*", "engine*", "modules*", "integrations*", "workers*", "atlas_api*"]
+
+[tool.setuptools.package-data]
+"engine.reporting" = ["templates/*.html"]
+"atlas_api" = ["migrations/*.ini", "migrations/*.py", "migrations/versions/*.py"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "apps/api"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+  "live: performs real network requests against public sources (deselected by default)",
+]
+addopts = "-m 'not live'"
+filterwarnings = ["ignore::DeprecationWarning:celery.*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["apps/web", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "ASYNC", "RUF"]
+ignore = ["S101", "B008", "RUF012", "S311", "RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B"]
+"apps/api/atlas_api/migrations/**" = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = true
+packages = ["shared", "engine", "modules", "integrations"]
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv", "apps/web"]

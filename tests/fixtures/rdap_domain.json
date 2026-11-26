@@ -1,0 +1,105 @@
+{
+  "objectClassName": "domain",
+  "ldhName": "EXAMPLE.COM",
+  "status": [
+    "client delete prohibited",
+    "client transfer prohibited"
+  ],
+  "events": [
+    {
+      "eventAction": "registration",
+      "eventDate": "1995-08-14T04:00:00Z"
+    },
+    {
+      "eventAction": "expiration",
+      "eventDate": "2030-08-13T04:00:00Z"
+    },
+    {
+      "eventAction": "last changed",
+      "eventDate": "2025-08-14T07:01:39Z"
+    }
+  ],
+  "nameservers": [
+    {
+      "ldhName": "A.IANA-SERVERS.NET"
+    },
+    {
+      "ldhName": "B.IANA-SERVERS.NET"
+    }
+  ],
+  "secureDNS": {
+    "delegationSigned": true
+  },
+  "entities": [
+    {
+      "roles": [
+        "registrar"
+      ],
+      "publicIds": [
+        {
+          "type": "IANA Registrar ID",
+          "identifier": "376"
+        }
+      ],
+      "vcardArray": [
+        "vcard",
+        [
+          [
+            "version",
+            {},
+            "text",
+            "4.0"
+          ],
+          [
+            "fn",
+            {},
+            "text",
+            "RESERVED-Internet Assigned Numbers Authority"
+          ]
+        ]
+      ]
+    },
+    {
+      "roles": [
+        "registrant"
+      ],
+      "vcardArray": [
+        "vcard",
+        [
+          [
+            "version",
+            {},
+            "text",
+            "4.0"
+          ],
+          [
+            "kind",
+            {},
+            "text",
+            "individual"
+          ],
+          [
+            "fn",
+            {},
+            "text",
+            "Jane Private Person"
+          ],
+          [
+            "adr",
+            {},
+            "text",
+            [
+              "",
+              "",
+              "1 Private Street",
+              "Town",
+              "",
+              "00000",
+              "US"
+            ]
+          ]
+        ]
+      ]
+    }
+  ]
+}

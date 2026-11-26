@@ -1,0 +1,12 @@
+{
+  "type_of": "user",
+  "id": 1234,
+  "username": "octo-sample",
+  "name": "Octo Sample",
+  "summary": "Writes about APIs.",
+  "twitter_username": "octosample",
+  "github_username": "octo-sample",
+  "website_url": "https://octo.example.org",
+  "location": "Sample City",
+  "joined_at": "Jan 2, 2019"
+}

@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "services": [
+    [
+      [
+        "com",
+        "net"
+      ],
+      [
+        "https://rdap.example-registry.test/"
+      ]
+    ],
+    [
+      [
+        "test"
+      ],
+      [
+        "https://rdap.example-registry.test/"
+      ]
+    ]
+  ]
+}
