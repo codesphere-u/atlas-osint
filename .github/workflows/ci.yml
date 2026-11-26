@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Type check
+        run: mypy
+      - name: Tests
+        run: pytest -q --junitxml=pytest-report.xml
+      - name: Entity-resolution benchmark (synthetic)
+        run: python scripts/evaluate_entity_resolution.py > /dev/null
+      - name: Source coverage document is up to date
+        run: |
+          python scripts/generate_source_coverage.py
+          git diff --exit-code docs/source-coverage.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-report
+          path: |
+            pytest-report.xml
+            docs/test-results/entity-resolution-metrics.json
+
+  postgres-migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: atlas
+          POSTGRES_USER: atlas
+          POSTGRES_PASSWORD: atlas
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U atlas" --health-interval 5s --health-retries 20
+    env:
+      ATLAS_DATABASE_URL: postgresql+psycopg://atlas:atlas@localhost:5432/atlas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Apply migrations and check for model drift
+        run: |
+          atlas migrate
+          alembic -c apps/api/atlas_api/migrations/alembic.ini check
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Bandit (SAST)
+        run: bandit -q -c pyproject.toml -r shared engine modules integrations workers apps/api
+      - name: pip-audit (dependency vulnerabilities)
+        run: pip-audit --skip-editable
+      - name: npm audit (production dependencies)
+        working-directory: apps/web
+        run: |
+          npm ci
+          npm audit --omit=dev --audit-level=high
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [backend, web]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build API image
+        run: docker build -f docker/api.Dockerfile -t atlas-osint/api:ci .
+      - name: Build web image
+        run: docker build -f docker/web.Dockerfile -t atlas-osint/web:ci .
+      - name: Compose configuration is valid
+        run: |
+          cat > .env <<ENV
+          ATLAS_SECRET_KEY=ci-secret-key-ci-secret-key-ci-secret-key-1
+          ATLAS_ENCRYPTION_KEY=x5Hk3ZbUq0Gv1H1Qd8qUe1c2bH9H8mJm3oT3n0W7k2Q=
+          ATLAS_HASH_KEY=ci-hash-key
+          POSTGRES_PASSWORD=ci-postgres
+          REDIS_PASSWORD=ci-redis
+          ENV
+          docker compose config -q

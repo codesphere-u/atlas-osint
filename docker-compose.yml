@@ -1,0 +1,132 @@
+# ATLAS OSINT – production-style local deployment.
+#   cp .env.example .env && docker compose run --rm api atlas generate-keys >> .env   (then edit .env)
+#   docker compose up -d --build
+# Only Caddy publishes ports; all other services live on an internal network.
+name: atlas-osint
+
+x-app-env: &app-env
+  ATLAS_ENV: ${ATLAS_ENV:-production}
+  ATLAS_DATABASE_URL: postgresql+psycopg://atlas:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/atlas
+  ATLAS_REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379/0
+  ATLAS_TASK_BACKEND: celery
+  ATLAS_SECRET_KEY: ${ATLAS_SECRET_KEY:?set ATLAS_SECRET_KEY}
+  ATLAS_ENCRYPTION_KEY: ${ATLAS_ENCRYPTION_KEY:?set ATLAS_ENCRYPTION_KEY}
+  ATLAS_HASH_KEY: ${ATLAS_HASH_KEY:?set ATLAS_HASH_KEY}
+  ATLAS_COOKIE_SECURE: "true"
+  ATLAS_CORS_ORIGINS: https://${ATLAS_DOMAIN:-localhost}
+  ATLAS_BOOTSTRAP_ADMIN_EMAIL: ${ATLAS_BOOTSTRAP_ADMIN_EMAIL:-}
+  ATLAS_BOOTSTRAP_ADMIN_PASSWORD: ${ATLAS_BOOTSTRAP_ADMIN_PASSWORD:-}
+  ATLAS_AI_PROVIDER: ${ATLAS_AI_PROVIDER:-none}
+  ATLAS_AI_MODEL: ${ATLAS_AI_MODEL:-claude-opus-5-5}
+  ATLAS_ANTHROPIC_API_KEY: ${ATLAS_ANTHROPIC_API_KEY:-}
+  ATLAS_OPENAI_COMPATIBLE_BASE_URL: ${ATLAS_OPENAI_COMPATIBLE_BASE_URL:-}
+  ATLAS_GITHUB_TOKEN: ${ATLAS_GITHUB_TOKEN:-}
+  ATLAS_HIBP_API_KEY: ${ATLAS_HIBP_API_KEY:-}
+  ATLAS_COMPANIES_HOUSE_API_KEY: ${ATLAS_COMPANIES_HOUSE_API_KEY:-}
+  ATLAS_OPENCORPORATES_API_TOKEN: ${ATLAS_OPENCORPORATES_API_TOKEN:-}
+  ATLAS_NUMVERIFY_API_KEY: ${ATLAS_NUMVERIFY_API_KEY:-}
+  ATLAS_SEC_EDGAR_USER_AGENT: ${ATLAS_SEC_EDGAR_USER_AGENT:-}
+  ATLAS_DEFAULT_RETENTION_DAYS: ${ATLAS_DEFAULT_RETENTION_DAYS:-90}
+  ATLAS_LOG_LEVEL: ${ATLAS_LOG_LEVEL:-INFO}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: atlas
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas -d atlas"]
+      interval: 5s
+      retries: 20
+    networks: [internal]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD}", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+      interval: 5s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks: [internal]
+
+  api:
+    build: { context: ., dockerfile: docker/api.Dockerfile }
+    image: atlas-osint/api:${ATLAS_VERSION:-latest}
+    restart: unless-stopped
+    environment: *app-env
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    networks: [internal, egress]
+
+  worker:
+    image: atlas-osint/api:${ATLAS_VERSION:-latest}
+    restart: unless-stopped
+    command: ["celery", "-A", "workers.celery_app", "worker", "-B", "--loglevel=INFO", "--concurrency=4",
+              "--schedule=/tmp/celerybeat-schedule"]
+    environment:
+      <<: *app-env
+      ATLAS_AUTO_MIGRATE: "false"
+    depends_on:
+      api: { condition: service_healthy }
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A workers.celery_app inspect ping -d celery@$$HOSTNAME --timeout 5 | grep -q pong"]
+      interval: 30s
+      retries: 3
+    networks: [internal, egress]
+
+  web:
+    build: { context: ., dockerfile: docker/web.Dockerfile }
+    image: atlas-osint/web:${ATLAS_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      ATLAS_API_URL: http://api:8000
+    depends_on:
+      api: { condition: service_healthy }
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    networks: [internal]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      ATLAS_DOMAIN: ${ATLAS_DOMAIN:-localhost}
+    ports:
+      - "${ATLAS_HTTP_PORT:-80}:80"
+      - "${ATLAS_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web, api]
+    networks: [internal, egress]
+
+networks:
+  internal:
+    internal: true
+  egress: {}
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

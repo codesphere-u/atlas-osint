@@ -8,10 +8,10 @@ or ``repr`` output.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import Field, SecretStr, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     # HMAC key used for identifier lookup hashes (suppression list, audit log).
     hash_key: SecretStr | None = None
     access_token_ttl_minutes: int = 60
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    cors_origins: Annotated[list[str], NoDecode] = Field(default_factory=lambda: ["http://localhost:3000"])
     cookie_secure: bool = False
     api_rate_limit_per_minute: int = 120
     public_rate_limit_per_minute: int = 10
@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     http_timeout_seconds: float = 15.0
     http_max_response_bytes: int = 5_000_000
     http_pin_dns: bool = True
-    http_allowed_ports: list[int] = Field(default_factory=lambda: [80, 443])
+    http_allowed_ports: Annotated[list[int], NoDecode] = Field(default_factory=lambda: [80, 443])
     user_agent: str = "ATLAS-OSINT/0.1 (+https://github.com/atlas-osint/atlas-osint; research)"
     adapter_timeout_seconds: float = 30.0
     max_concurrent_adapters: int = 8
@@ -78,8 +78,13 @@ class Settings(BaseSettings):
     @field_validator("cors_origins", "http_allowed_ports", mode="before")
     @classmethod
     def _split_csv(cls, v: object) -> object:
-        if isinstance(v, str) and not v.strip().startswith("["):
-            return [p.strip() for p in v.split(",") if p.strip()]
+        if isinstance(v, str):
+            text = v.strip()
+            if text.startswith("["):
+                import json
+
+                return json.loads(text)
+            return [p.strip() for p in text.split(",") if p.strip()]
         return v
 
     @property

@@ -123,6 +123,9 @@ def create_app() -> FastAPI:
             key = f"public:{ip}:{path}" if public else f"api:{auth or ip}"
             limit = s.public_rate_limit_per_minute if public else s.api_rate_limit_per_minute
             allowed, _remaining, reset = limiter.hit(key, limit)
+            # Per-IP ceiling as well, so rotating (invalid) credentials cannot bypass the per-credential limit.
+            if allowed and not public:
+                allowed, _remaining, reset = limiter.hit(f"ip:{ip}", limit * 4)
             if not allowed:
                 return JSONResponse(
                     {"detail": "rate limit exceeded"}, status_code=429, headers={"Retry-After": str(reset)}

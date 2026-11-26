@@ -1,0 +1,23 @@
+# TLS terminating reverse proxy. With ATLAS_DOMAIN set to a public hostname Caddy obtains a
+# certificate automatically (ACME); with "localhost" it issues a locally trusted certificate.
+{$ATLAS_DOMAIN:localhost} {
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains"
+		-Server
+	}
+	@api path /api/* /healthz /readyz
+	handle @api {
+		reverse_proxy api:8000
+	}
+	handle {
+		reverse_proxy web:3000
+	}
+	request_body {
+		max_size 2MB
+	}
+	log {
+		output stdout
+		format json
+	}
+}

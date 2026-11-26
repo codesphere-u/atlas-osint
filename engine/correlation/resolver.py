@@ -146,6 +146,8 @@ def resolve(findings: list[Finding], subject: Identifier) -> CorrelationResult:
         label = (
             a.get("candidate_name")
             or a.get("legal_name")
+            or a.get("article_title")
+            or a.get("doc_title")
             or a.get("display_name")
             or (f"{a.get('platform')}/{a.get('username')}" if a.get("platform") else None)
         )

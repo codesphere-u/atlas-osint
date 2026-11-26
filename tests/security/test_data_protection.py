@@ -131,3 +131,31 @@ def test_production_configuration_is_validated():
         database_url="postgresql+psycopg://a:b@db/atlas",
     )
     assert ok.validate_production() == []
+
+
+def test_list_settings_accept_csv_and_json_env(monkeypatch):
+    monkeypatch.setenv("ATLAS_CORS_ORIGINS", "https://a.example, https://b.example")
+    monkeypatch.setenv("ATLAS_HTTP_ALLOWED_PORTS", "[80, 443, 8443]")
+    s = Settings()
+    assert s.cors_origins == ["https://a.example", "https://b.example"]
+    assert s.http_allowed_ports == [80, 443, 8443]
+
+
+def test_rotating_bogus_tokens_hit_per_ip_limit():
+    from atlas_api.main import create_app
+    from fastapi.testclient import TestClient
+
+    from shared.config import get_settings
+
+    s = get_settings()
+    old = s.api_rate_limit_per_minute
+    s.api_rate_limit_per_minute = 2  # per-IP ceiling = 8
+    try:
+        with TestClient(create_app()) as c:
+            codes = [
+                c.get("/api/v1/auth/me", headers={"Authorization": f"Bearer bogus-token-{i:04d}"}).status_code
+                for i in range(12)
+            ]
+        assert codes[0] == 401 and 429 in codes
+    finally:
+        s.api_rate_limit_per_minute = old
