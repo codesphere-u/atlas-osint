@@ -73,9 +73,10 @@ class ExampleRegistryAdapter(SourceAdapter):
 ### What the base class does for you
 
 - `run()` checks input type, credentials (`configuration_status`), consent (`requires_subject_consent`) and scope
-  (`active_probe`), applies a timeout and converts every failure into an `AdapterResult` status – an adapter can never
+  (`active_probe` for anything that sends traffic to the target; `requires_authorized_scope` for passive lookups
+  that are only legitimate for assets the requester may assess, such as lookalike discovery), applies a timeout and converts every failure into an `AdapterResult` status – an adapter can never
   crash an investigation.
-- `fetch()` goes through the SSRF-safe client, enforces the declared rate limit and maps 401/403/429/5xx to statuses.
+- `fetch(ctx, url, method="GET", **kwargs)` goes through the SSRF-safe client (any method; e.g. `POST` for match APIs), enforces the declared rate limit and maps 401/403/429/5xx to statuses.
 - `finding()` builds the citation, truncates long text, hashes the raw response, drops empty attributes.
 - Attributes not listed in `meta.fields` are removed and the finding is flagged `undeclared_fields_dropped`.
 - After collection the privacy policy filter runs regardless of what the adapter emits.

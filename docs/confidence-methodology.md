@@ -1,4 +1,4 @@
-# Confidence methodology
+# Confidence & assessment methodology
 
 Confidence in ATLAS is **explainable by construction**: a score is the sum of a small number of fixed rules, every
 applied rule is stored on the finding (`confidence.reasons`), and the sum of the rule deltas always equals the
@@ -22,7 +22,7 @@ name-only matches out of the "confirmed" bucket.
 | `inference` | −0.15 | The evidence itself is an inference. |
 | `corroboration` | +0.07 per independent source asserting the same claim key, max +0.15 | Only *different* sources count. |
 | `contradiction` | −0.25 | Another source reports a conflicting value for the same entity attribute. |
-| `name_only_cap` | cap 0.50 | Person candidate found by searching a name. |
+| `name_only_cap` | cap 0.50 | Person candidate or publication found by searching a name (Crossref works matched on the exact author name included). |
 | `name_collision_cap` | cap 0.40 | Several distinct candidates share the name. |
 | `variant_cap` | cap 0.40 | Found via a handle variant, not the queried handle. |
 | `news_mention_cap` | cap 0.35 | An exact phrase in news text does not establish the article concerns the subject. |
@@ -58,7 +58,11 @@ Implementation: `engine/correlation/resolver.py`.
    `lists_website`, `cryptographic_proof` (direct, stated by the source), `mutual_link` (both reference each other),
    `shares_website_with` (inference).
 5. Relationship confidence is the best score of supporting findings; inference relationships are capped at 0.50.
-6. Contradictions are detected for selected attributes (validity, region, line type, registrar, dates, jurisdiction,
+6. **Multi-subject resolution** (cases): every investigation's subject is registered as an entity, so findings from
+   several investigations resolve into one graph. Subsidiaries and parents from GLEIF Level 2 attach to the subject
+   organisation with `parent_of` / `subsidiary_of` edges (keyed by LEI); sanctions-screening candidates attach as
+   `screening_candidate` (inference), Crossref works as `name_in_author_list` (inference) unless linked by ORCID.
+7. Contradictions are detected for selected attributes (validity, region, line type, registrar, dates, jurisdiction,
    legal name) when two different sources report different normalised values for the same entity.
 
 ## Measured behaviour
@@ -74,3 +78,63 @@ cross-links). Current pairwise results (`docs/test-results/entity-resolution-met
 
 These numbers describe **synthetic data only** and are not a claim about real-world accuracy. The design trades
 recall for precision: missed links appear as *possible* matches for analyst review rather than as false facts.
+
+## Exposure scorecard
+
+Implementation: `engine/assessment/posture.py`. The scorecard grades the **external security posture of a domain**
+from evidence that was already collected – it performs no extra requests. Each check has a severity weight
+(**high 10 · medium 5 · low 2**) and a status:
+
+| Status | Credit | Meaning |
+|---|---|---|
+| pass | 100 % | Control present and configured as recommended |
+| warn | 50 % | Present but weak (e.g. DMARC `p=none`, SPF `~all`, MTA-STS in `testing`) |
+| fail | 0 % | Absent or misconfigured |
+| info / unknown | not scored | Not applicable, or no evidence (source unavailable, outside scope) |
+
+`score = round(100 × Σ credit × weight / Σ weight)` over scored checks; **grade** A ≥ 90 · B ≥ 80 · C ≥ 70 · D ≥ 60 ·
+F otherwise. No grade is given when fewer than five checks could be evaluated, because a grade over two or three
+checks would overstate what is known.
+
+| Category | Checks (severity) |
+|---|---|
+| Email | SPF restricts senders (high) · DMARC enforced (high) · DMARC aggregate reporting (low) · MTA-STS (medium) · TLS-RPT (low) · DKIM key published (medium) |
+| DNS | DNSSEC signed (medium) · CAA restricts issuers (low) |
+| Web *(authorised scope)* | HTTP → HTTPS (high) · HSTS (medium) · CSP (medium) · X-Content-Type-Options (low) · Referrer-Policy (low) · clickjacking protection (low) · security.txt (low) |
+| Exposure | No sensitive services exposed (high) · no known-vulnerable software versions (high) |
+| Registration | Not expiring within 30 days (high) · registrar transfer lock (low) |
+| Brand *(authorised scope)* | Lookalike domains (medium) |
+
+Each check records its detail, the findings it was derived from, a recommendation when it does not pass, and a
+reference (RFC, OWASP, NCSC). Known limits: DKIM is checked only against common selectors, so a missing key is a
+*warning*, not a failure; InternetDB CVEs are inferred from software versions and are not confirmed
+vulnerabilities; MTA-STS absence is a warning because adoption is still low. Vendor ratings (UpGuard,
+SecurityScorecard, Bitsight) use other checks and weights, so ATLAS grades are **not comparable** with them.
+
+## Risk highlights
+
+Implementation: `engine/assessment/risk.py`. Highlights are derived deterministically from finding flags, finding
+types and failed high-severity checks:
+
+| Trigger | Severity |
+|---|---|
+| Possible sanctions-list match | critical |
+| Possible debarment / crime-list match · sensitive service exposed · failed high-severity posture check | high |
+| Possible PEP, regulatory, person-of-interest match · known-vulnerable versions · mail-capable lookalikes · breach notification · dissolved/inactive entity | medium |
+
+Each highlight lists its supporting findings and is marked **confirmed** only when all of them are classified as
+confirmed; screening hits are therefore shown as *requires confirmation* until an analyst verifies them. An
+investigation's risk level is its most severe highlight.
+
+## Change detection
+
+Implementation: `engine/changes.py`. After each run ATLAS stores a snapshot of finding signatures
+(`source | claim_key`). The next run is compared with it:
+
+- **added** / **removed** – signatures present in only one run;
+- only sources that **answered in both runs** are compared. A source that was unavailable, rate-limited or not
+  configured in one of the runs is listed under *not compared* instead of producing phantom additions or removals;
+- the first run is a **baseline**.
+
+Monitoring (scheduled re-runs at 6 h – 30 d intervals) uses the same comparison. It is available for organisations,
+domains, URLs and IP addresses only.

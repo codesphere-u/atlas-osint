@@ -24,6 +24,15 @@ government identifiers, credentials, passwords or tokens, health, religion, ethn
 opinion, union membership, biometric or criminal-record data. Breach lookups return breach *names* only, and only
 with documented consent.
 
+ATLAS does not offer scheduled monitoring of individuals: monitoring is limited to organisations and
+infrastructure. Pivots from one investigation to another inherit its authorisation, require the analyst to confirm
+the new identifier is covered by it, and re-apply the consent rules when the new subject is a person.
+
+Sanctions / PEP screening (OpenSanctions) returns *possible* matches based on name similarity. A match is not a
+finding of wrongdoing; reports label it "requires confirmation" until an analyst verifies it, and name-only caps
+keep it out of the confirmed bucket. Publications found by author name (Crossref) are likewise only linked to a
+person directly when an ORCID iD connects them.
+
 ATLAS never identifies the subscriber of a phone number, never probes mailboxes or triggers password-reset flows,
 never logs into accounts and never accesses non-public systems.
 
@@ -39,7 +48,9 @@ listed in [`docs/source-coverage.md`](docs/source-coverage.md). Operators must c
   requests promptly (Administration → Privacy).
 - Configure retention to the shortest period that meets your purpose.
 - Restrict accounts to trained analysts; review the audit log regularly.
-- Do not export reports to unsecured locations; reports contain personal data.
+- Do not export reports to unsecured locations; reports contain personal data. Set the TLP marking on each
+  investigation or case to reflect who may receive its exports.
+- If you enable sanctions/PEP screening, check that your use is covered by the OpenSanctions licence.
 
 ## Correction process
 

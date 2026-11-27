@@ -52,3 +52,46 @@ projects**; where an idea is borrowed it is noted below.
 - PhoneInfoga maintenance notice: <https://github.com/sundowndev/phoneinfoga>
 - Maigret: <https://github.com/soxoj/maigret>
 - Other repositories as linked in the table.
+
+---
+
+# v0.2 research – intelligence-platform features and UI patterns (November 2026)
+
+Goal: identify what makes commercial and open intelligence platforms effective for analysts, and adopt what fits
+ATLAS's lawful-use model. Findings were checked against vendor documentation and, for every new data source, the live
+API response was inspected before an adapter was written.
+
+## Platform patterns
+
+| Observation | Where seen | ATLAS v0.2 response |
+|---|---|---|
+| Investigations are organised in **cases**; analysts **pivot** from a discovered entity into the next query in one click, and graph, table and histogram views coexist | Maltego (Graph browser: case management, one-click pivot from Search into Graph, graph/table/histogram views, split screen) | Cases with merged graph and timeline; one-click pivot dialogs on any linked identifier; graph + split-pane table + timeline histogram |
+| Running only relevant transforms avoids cluttering the graph with noise | Maltego best-practice guidance | Module-defined, bounded pivots; kind filters, inference toggle and focus mode in the graph |
+| External attack-surface tools grade a domain from email authentication (SPF, DMARC, MTA-STS, TLS-RPT), DNSSEC, TLS, headers, exposed ports and known CVEs; **each vendor weights checks differently, so scores are not comparable** | SecLens, UpGuard, Infoblox EASM, domain-posture checkers | Exposure scorecard built only from collected evidence, published weights, per-check recommendation and reference; explicitly not comparable with vendor scores |
+| MTA-STS is rarely enforced (≈0.6 % of mail-enabled domains) and DMARC moves none → quarantine → reject | SecLens study, DMARC guidance | MTA-STS absence is a *warning* not a failure; DMARC p=none is a warning |
+| Passive discovery via certificate transparency and DNS, no active scanning | Infoblox EASM | Two independent CT sources (crt.sh + Cert Spotter) corroborate subdomains; Shodan InternetDB provides exposure data without ATLAS scanning anything |
+| Sanctions/PEP screening returns **possible matches with a similarity score; the score is match confidence, not risk**; topics distinguish sanctions, PEP, debarment, regulatory action | OpenSanctions API documentation | OpenSanctions adapter records hits as *possible* matches with topics and datasets, and also records clear results as evidence |
+| Intelligence sharing uses **TLP 2.0** (CLEAR, GREEN, AMBER, AMBER+STRICT, RED) and **STIX 2.1** bundles with the marking-definition objects included | FIRST/CISA TLP 2.0; OASIS STIX 2.1; EclecticIQ ingestion notes | TLP on investigations and cases, printed on every PDF page; STIX export embeds the official OASIS TLP 2.0 marking objects (verified byte-for-byte) and uses spec-defined deterministic observable IDs |
+| Keyboard-first command palettes, split-pane master/detail lists and dense tables with filters are standard in professional tools | Linear, Vercel, Raycast, Kibana-style analyst consoles | ⌘K palette with identifier auto-detection, j/k navigation, bulk actions, grouping and sorting |
+
+## New sources – verification notes
+
+| Source | Verified behaviour | Terms |
+|---|---|---|
+| Shodan InternetDB | `GET /{ip}` returns `ports`, `cpes`, `hostnames`, `tags`, `vulns`; 404 `{"detail":"No information available"}` for unknown IPs; IPv4 only | Free for non-commercial use; commercial products need a Shodan licence |
+| SSLMate Cert Spotter | `GET /v1/issuances?domain=…&include_subdomains=true&expand=dns_names&expand=issuer` works anonymously with a small allowance; lists unexpired certificates | SSLMate terms; optional API key |
+| Mastodon | `GET /api/v1/accounts/lookup?acct=` returns profile `fields[]` with `verified_at` for rel="me"-verified links | Instance terms |
+| Bluesky | `app.bsky.actor.getProfile` on `public.api.bsky.app`; 400 for unknown handles; custom-domain handles are verified by Bluesky | Bluesky terms |
+| Crossref | `/works?query.author=` is fuzzy, so ATLAS keeps only works with an exact author-name match; author entries may carry ORCID iDs | Metadata free to reuse |
+| GLEIF Level 2 | `/lei-records/{lei}/direct-parent`, `/ultimate-parent` (404 when none reported), `/direct-children` with pagination totals | CC0 |
+| OpenSanctions | `POST /match/default` with `Authorization: ApiKey …`, body `{"queries":{"q":{"schema":"Company","properties":{"name":[…]}}}}`; results carry `score`, `match`, `datasets`, `properties.topics` | CC BY-NC 4.0 for non-commercial use; free keys for journalism/NGO/academia; business use needs a licence |
+| DNS-over-HTTPS | Google/Cloudflare JSON API: `Status` 0/3, typed `Answer` records; Cloudflare quotes TXT segments | Public resolvers |
+
+## Sources
+
+- Maltego platform guide and pricing: <https://academy.maltego.com/gtm-enablement-guide>, <https://www.maltego.com/pricing>
+- Domain security posture tooling: <https://mcpservers.org/de/servers/seclens-one>, <https://www.upguard.com/security-report/powerdmarc>, <https://www.infoblox.com/products/brand-protection>
+- OpenSanctions API and licensing: <https://www.opensanctions.org/docs/api/>, <https://www.opensanctions.org/docs/commercial/exemption/>, <https://www.opensanctions.org/faq/api/metering/>
+- TLP 2.0: <https://www.cisa.gov/tlp>; STIX TLP 2.0 marking objects: OASIS `cti-stix-common-objects` (extension-definition-specifications/tlp-2.0); EclecticIQ STIX 2.1 marking notes: <https://docs.eclecticiq.com/ic/2.13.0/STIX_2.1_Data_Markings.html>
+- Shodan InternetDB: <https://blog.shodan.io/introducing-the-internetdb-api/>, <https://book.shodan.io/developer-apis/internetdb/>
+- Cert Spotter API: <https://sslmate.com/certspotter/api/docs-v1>

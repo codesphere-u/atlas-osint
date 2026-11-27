@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     http_max_response_bytes: int = 5_000_000
     http_pin_dns: bool = True
     http_allowed_ports: Annotated[list[int], NoDecode] = Field(default_factory=lambda: [80, 443])
-    user_agent: str = "ATLAS-OSINT/0.1 (+https://github.com/codesphere-u/atlas-osint; research)"
+    user_agent: str = "ATLAS-OSINT/0.2 (+https://github.com/codesphere-u/atlas-osint; research)"
     adapter_timeout_seconds: float = 30.0
     max_concurrent_adapters: int = 8
     sec_edgar_user_agent: str | None = None  # SEC requires a contact in the UA
