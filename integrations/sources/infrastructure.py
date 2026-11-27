@@ -146,7 +146,7 @@ class ShodanInternetDbAdapter(SourceAdapter):
                         )
                     ],
                     match_type=MatchType.EXACT if identifier.type == IdentifierType.IP else MatchType.RELATED,
-                    excerpt=f"ports={ports}; cpes={attrs['cpes'][:3]}",
+                    excerpt=f"ports={ports}; cpes={(d.get('cpes') or [])[:3]}",
                     raw=resp.content,
                     entity_hint=f"ip:{ip}",
                     entity_kind="ip",
@@ -360,7 +360,7 @@ class SecurityTxtAdapter(SourceAdapter):
                 )
             ]
         fields = parse_security_txt(resp.text)
-        expires = parse_datetime((fields.get("expires") or [None])[0])
+        expires = parse_datetime(next(iter(fields.get("expires") or []), None))
         expired = bool(expires and expires < datetime.now(UTC))
         attrs: dict[str, Any] = {
             "present": True,
@@ -371,7 +371,7 @@ class SecurityTxtAdapter(SourceAdapter):
             "encryption": fields.get("encryption", [])[:3],
             "policy": fields.get("policy", [])[:3],
             "canonical": fields.get("canonical", [])[:3],
-            "preferred_languages": (fields.get("preferred-languages") or [None])[0],
+            "preferred_languages": next(iter(fields.get("preferred-languages") or []), None),
             "pgp_signed": "-----BEGIN PGP SIGNED MESSAGE-----" in resp.text,
         }
         desc = f"{domain} publishes security.txt with {len(attrs['contact'])} contact(s)"
