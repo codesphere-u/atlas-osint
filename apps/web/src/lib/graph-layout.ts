@@ -74,3 +74,49 @@ export function simulate(
   }
   return nodes;
 }
+
+/** Radial layout: subjects in the centre, other nodes on rings by graph distance (BFS) from a subject. */
+export function radialLayout(ids: string[], edges: LayoutEdge[], width: number, height: number, centers: string[]): LayoutNode[] {
+  const adj = new Map<string, Set<string>>(ids.map((id) => [id, new Set()]));
+  for (const e of edges) {
+    adj.get(e.source)?.add(e.target);
+    adj.get(e.target)?.add(e.source);
+  }
+  const depth = new Map<string, number>();
+  const queue = centers.filter((c) => adj.has(c));
+  queue.forEach((c) => depth.set(c, 0));
+  while (queue.length) {
+    const cur = queue.shift()!;
+    for (const n of adj.get(cur) ?? []) {
+      if (!depth.has(n)) {
+        depth.set(n, (depth.get(cur) ?? 0) + 1);
+        queue.push(n);
+      }
+    }
+  }
+  const maxDepth = Math.max(1, ...depth.values());
+  for (const id of ids) if (!depth.has(id)) depth.set(id, maxDepth + 1);
+  const rings = new Map<number, string[]>();
+  for (const id of [...ids].sort()) rings.set(depth.get(id)!, [...(rings.get(depth.get(id)!) ?? []), id]);
+  const ringCount = Math.max(...rings.keys());
+  const maxR = Math.min(width, height) / 2 - 40;
+  const out: LayoutNode[] = [];
+  for (const [d, members] of rings) {
+    const r = d === 0 ? (members.length > 1 ? 40 : 0) : (d / ringCount) * maxR;
+    members.forEach((id, i) => {
+      const a = (2 * Math.PI * i) / members.length + d * 0.35;
+      out.push({ id, x: width / 2 + r * Math.cos(a), y: height / 2 + r * Math.sin(a), vx: 0, vy: 0 });
+    });
+  }
+  return out;
+}
+
+/** Ids of a node and its direct neighbours. */
+export function neighbourhood(id: string, edges: LayoutEdge[]): Set<string> {
+  const out = new Set([id]);
+  for (const e of edges) {
+    if (e.source === id) out.add(e.target);
+    if (e.target === id) out.add(e.source);
+  }
+  return out;
+}

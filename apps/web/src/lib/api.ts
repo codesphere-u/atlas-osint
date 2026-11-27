@@ -52,6 +52,6 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown 
   return (await res.json()) as T;
 }
 
-export function reportUrl(id: string, format: "json" | "csv" | "html" | "pdf"): string {
+export function reportUrl(id: string, format: "json" | "csv" | "html" | "pdf" | "stix"): string {
   return `/api/v1/investigations/${encodeURIComponent(id)}/report?format=${format}`;
 }

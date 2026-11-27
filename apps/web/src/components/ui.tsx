@@ -168,3 +168,98 @@ export function KeyValue({ data }: { data: Record<string, unknown> }) {
     </dl>
   );
 }
+
+/* ---------------------------------------------------------------- v0.2 primitives */
+
+const TLP_STYLE: Record<string, string> = {
+  clear: "text-white",
+  green: "text-[#33ff00]",
+  amber: "text-[#ffc000]",
+  "amber+strict": "text-[#ffc000]",
+  red: "text-[#ff2b2b]",
+};
+
+/** FIRST TLP 2.0 label: coloured text on black, as the standard prescribes. */
+export function TlpBadge({ tlp }: { tlp: string }) {
+  return (
+    <span title="Traffic Light Protocol 2.0 sharing restriction"
+      className={cx("inline-flex items-center rounded bg-black px-2 py-0.5 font-mono text-[11px] font-bold tracking-wide ring-1 ring-white/10", TLP_STYLE[tlp] ?? "text-white")}>
+      TLP:{tlp.toUpperCase()}
+    </span>
+  );
+}
+
+const RISK_STYLE: Record<string, string> = {
+  critical: "border-[#dc3c3d] bg-[#dc3c3d]/15 text-[#ff8a8b]",
+  high: "border-[#f18a59]/70 bg-[#f18a59]/10 text-[#f8b08c]",
+  medium: "border-[#fbb315]/60 bg-[#fbb315]/10 text-[#fbcf6a]",
+  low: "border-line text-slate-300",
+  none: "border-line text-muted",
+};
+
+export function RiskBadge({ level }: { level: string | null | undefined }) {
+  if (!level) return null;
+  return <Badge className={RISK_STYLE[level] ?? RISK_STYLE.none} title="Highest risk highlight">{level === "none" ? "No risk flags" : `${level} risk`}</Badge>;
+}
+
+const GRADE_STYLE: Record<string, string> = {
+  A: "text-[#34d399] border-[#34d399]/50",
+  B: "text-[#86efac] border-[#86efac]/40",
+  C: "text-[#fbcf6a] border-[#fbb315]/50",
+  D: "text-[#f8b08c] border-[#f18a59]/60",
+  F: "text-[#ff8a8b] border-[#dc3c3d]/70",
+};
+
+export function GradeBadge({ grade, size = "sm" }: { grade: string | null | undefined; size?: "sm" | "lg" }) {
+  if (!grade) return null;
+  return (
+    <span title="Exposure scorecard grade"
+      className={cx("inline-grid place-items-center rounded-md border font-bold", GRADE_STYLE[grade] ?? "border-line text-slate-200",
+        size === "lg" ? "h-16 w-16 text-4xl" : "h-6 min-w-6 px-1 text-xs")}>
+      {grade}
+    </span>
+  );
+}
+
+export function Skeleton({ className }: { className?: string }) {
+  return <div aria-hidden className={cx("animate-pulse rounded-md bg-ink-700/60", className)} />;
+}
+
+export function SkeletonRows({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="space-y-2" role="status" aria-label="Loading">
+      {Array.from({ length: rows }, (_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+    </div>
+  );
+}
+
+export function Kbd({ children }: { children: ReactNode }) {
+  return <kbd className="rounded border border-line bg-ink-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-300">{children}</kbd>;
+}
+
+export function Modal({ open, onClose, title, children, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; wide?: boolean }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 pt-[10vh] backdrop-blur-sm"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}>
+      <div role="dialog" aria-modal="true" aria-label={title}
+        className={cx("w-full rounded-xl border border-line bg-ink-900 shadow-2xl", wide ? "max-w-2xl" : "max-w-lg")}>
+        <div className="flex items-center justify-between border-b border-line px-5 py-3">
+          <h2 className="text-sm font-semibold text-white">{title}</h2>
+          <button onClick={onClose} className="rounded p-1 text-muted hover:bg-ink-700 hover:text-white" aria-label="Close">✕</button>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+export function SectionTitle({ icon, children, aside }: { icon?: ReactNode; children: ReactNode; aside?: ReactNode }) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-2">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-100">{icon}{children}</h2>
+      {aside}
+    </div>
+  );
+}

@@ -58,6 +58,7 @@ export default function SourcesPage() {
                       <Badge title="Reliability grade">Reliability {s.reliability}</Badge>
                       <Badge>Inputs: {s.input_types.join(", ")}</Badge>
                       {s.legal.active_probe && <Badge className="border-warn/40 text-warn">Active · scope required</Badge>}
+                      {s.legal.requires_authorized_scope && <Badge className="border-warn/40 text-warn">Authorised scope only</Badge>}
                       {s.legal.requires_subject_consent && <Badge className="border-warn/40 text-warn">Consent required</Badge>}
                       {s.configured ? <Badge className="border-ok/40 text-ok">Configured</Badge> : <Badge className="border-warn/40 text-warn">{s.configuration_message}</Badge>}
                       {runs > 0 && <Badge className={failures ? "border-bad/40 text-bad" : "border-ok/40 text-ok"}>{runs - failures}/{runs} recent runs OK</Badge>}

@@ -6,14 +6,16 @@ import type { Finding } from "@/lib/types";
 import { Badge, Button, ClassificationBadge, ConfidenceMeter, KeyValue } from "./ui";
 
 export function EvidenceCard({
-  finding, canVerify, onVerify, injectionFlags,
+  finding, canVerify, onVerify, injectionFlags, defaultOpen = false, onPivot,
 }: {
   finding: Finding;
   canVerify: boolean;
   onVerify?: (id: string, status: "verified" | "rejected" | "unverified", note?: string) => Promise<void>;
   injectionFlags?: string[];
+  defaultOpen?: boolean;
+  onPivot?: (type: string, value: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const f = finding;
@@ -95,8 +97,16 @@ export function EvidenceCard({
                 <h4 className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-muted">Linked identifiers</h4>
                 <ul className="space-y-1 text-xs">
                   {f.linked.map((l, i) => (
-                    <li key={i} className="font-mono text-slate-300">
-                      {l.relation} → {l.identifier.type}:{l.identifier.value} <span className="text-muted">({l.evidence_kind})</span>
+                    <li key={i} className="flex items-center justify-between gap-2 font-mono text-slate-300">
+                      <span className="min-w-0 break-all">
+                        {l.relation} → {l.identifier.type}:{l.identifier.value} <span className="text-muted">({l.evidence_kind})</span>
+                      </span>
+                      {onPivot && (
+                        <button onClick={() => onPivot(l.identifier.type, l.identifier.value)}
+                          className="shrink-0 rounded border border-line px-1.5 py-0.5 font-sans text-[11px] text-accent hover:bg-accent-soft">
+                          Pivot
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>

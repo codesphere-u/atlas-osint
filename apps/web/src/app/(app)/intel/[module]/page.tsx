@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound, useParams } from "next/navigation";
 import { useApi } from "@/lib/hooks";
 import { fmtDate } from "@/lib/format";
@@ -35,7 +36,11 @@ export default function ModulePage() {
     <>
       <PageHeader title={cfg.title} subtitle={cfg.blurb} />
       <div className="space-y-6">
-        {canCreate && types && <InvestigationForm key={slug} types={types} defaultType={types[0]} />}
+        {canCreate && types && (
+          <Suspense fallback={null}>
+            <InvestigationForm key={slug} types={types} defaultType={types[0]} />
+          </Suspense>
+        )}
         <div className="grid gap-6 lg:grid-cols-2">
           <Card title="Guardrails">
             <ul className="list-inside list-disc space-y-1 text-sm text-slate-300">
@@ -51,7 +56,7 @@ export default function ModulePage() {
                     <Badge>Reliability {s.reliability}</Badge>
                     {!s.enabled && <Badge className="border-line text-muted">disabled</Badge>}
                     {!s.configured && <Badge className="border-warn/40 text-warn">needs credentials</Badge>}
-                    {s.legal.active_probe && <Badge className="border-warn/40 text-warn">scope required</Badge>}
+                    {(s.legal.active_probe || s.legal.requires_authorized_scope) && <Badge className="border-warn/40 text-warn">scope required</Badge>}
                     {s.legal.requires_subject_consent && <Badge className="border-warn/40 text-warn">consent required</Badge>}
                   </span>
                 </li>

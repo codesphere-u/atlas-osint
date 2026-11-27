@@ -5,7 +5,8 @@ import { useState } from "react";
 import { api, ApiError, reportUrl } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import { fmtDate } from "@/lib/format";
-import type { Analysis, Note, Statement } from "@/lib/types";
+import { useToast } from "@/lib/toast";
+import type { Analysis, CaseSummary, Note, Statement } from "@/lib/types";
 import { useInvestigation } from "@/components/InvestigationContext";
 import { useUser } from "@/components/AppShell";
 import { Badge, Button, Card, ErrorBox, inputClass, Spinner } from "@/components/ui";
@@ -21,6 +22,39 @@ function Statements({ items, empty }: { items: Statement[]; empty: string }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+function Handling() {
+  const { inv, reload } = useInvestigation();
+  const toast = useToast();
+  const { data: cases } = useApi<CaseSummary[]>("/api/v1/cases?status=open");
+  async function patch(body: Record<string, unknown>, label: string) {
+    try {
+      await api(`/api/v1/investigations/${inv.id}`, { method: "PATCH", json: body });
+      toast("success", label);
+      await reload();
+    } catch (e) {
+      toast("error", "Update failed", e instanceof ApiError ? e.messages.join(" ") : String(e));
+    }
+  }
+  return (
+    <Card title="Handling">
+      <div className="space-y-3 text-sm">
+        <label className="block text-xs text-muted">Sharing (TLP 2.0)
+          <select className={`${inputClass} mt-1`} value={inv.tlp} onChange={(e) => patch({ tlp: e.target.value }, `Marked TLP:${e.target.value.toUpperCase()}`)}>
+            {["clear", "green", "amber", "amber+strict", "red"].map((t) => <option key={t} value={t}>TLP:{t.toUpperCase()}</option>)}
+          </select>
+        </label>
+        <label className="block text-xs text-muted">Case
+          <select className={`${inputClass} mt-1`} value={inv.case_id ?? ""}
+            onChange={(e) => patch(e.target.value ? { case_id: e.target.value } : { remove_from_case: true }, e.target.value ? "Added to case" : "Removed from case")}>
+            <option value="">No case</option>
+            {cases?.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+          </select>
+        </label>
+      </div>
+    </Card>
   );
 }
 
@@ -108,7 +142,7 @@ export default function ReportPage() {
       </div>
       <div className="space-y-6">
         <Card title="Export report">
-          <p className="mb-3 text-xs text-muted">Reports include scope, collection period, sources consulted, verified findings, possible matches, contradictions, methodology, limitations and analyst notes. Exports are audited.</p>
+          <p className="mb-3 text-xs text-muted">Reports carry the {inv.tlp.toUpperCase()} marking and include an executive summary, scope, collection period, sources consulted, findings, contradictions, methodology, limitations and analyst notes. Exports are audited.</p>
           <div className="grid grid-cols-2 gap-2">
             {(["pdf", "html", "json", "csv"] as const).map((f) => (
               <a key={f} href={done ? reportUrl(inv.id, f) : undefined} aria-disabled={!done}
@@ -116,8 +150,13 @@ export default function ReportPage() {
                 {f}
               </a>
             ))}
+            <a href={done ? reportUrl(inv.id, "stix") : undefined} aria-disabled={!done}
+              className={`col-span-2 rounded-md border border-accent/40 px-3 py-2 text-center text-sm ${done ? "text-accent hover:bg-accent-soft" : "pointer-events-none text-muted"}`}>
+              STIX 2.1 bundle <span className="text-xs text-muted">(OpenCTI, MISP, TAXII)</span>
+            </a>
           </div>
         </Card>
+        {owner && <Handling />}
         <Card title={`Analyst notes (${notes?.length ?? 0})`}>
           <ul className="mb-3 max-h-72 space-y-2 overflow-y-auto text-sm">
             {notes?.map((n) => (

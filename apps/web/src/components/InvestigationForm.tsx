@@ -1,11 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
 import { api, ApiError } from "@/lib/api";
 import { LEGAL_BASIS_LABEL, TYPE_LABEL } from "@/lib/format";
 import { useApi } from "@/lib/hooks";
-import type { Investigation, Meta } from "@/lib/types";
+import type { CaseSummary, Investigation, Meta } from "@/lib/types";
 import { Button, Card, ErrorBox, Field, inputClass } from "./ui";
 
 const INDIVIDUAL_TYPES = new Set(["phone", "username", "name", "email"]);
@@ -23,10 +23,17 @@ const PLACEHOLDER: Record<string, string> = {
 
 export function InvestigationForm({ types, defaultType }: { types?: string[]; defaultType?: string }) {
   const router = useRouter();
+  const params = useSearchParams();
   const { data: meta } = useApi<Meta>("/api/v1/meta");
+  const { data: cases } = useApi<CaseSummary[]>("/api/v1/cases?status=open");
   const allowedTypes = types ?? meta?.identifier_types ?? Object.keys(TYPE_LABEL);
-  const [subjectType, setSubjectType] = useState(defaultType ?? allowedTypes[0] ?? "domain");
-  const [subject, setSubject] = useState("");
+  const presetType = params.get("type");
+  const [subjectType, setSubjectType] = useState(
+    presetType && (!types || types.includes(presetType)) ? presetType : defaultType ?? allowedTypes[0] ?? "domain",
+  );
+  const [subject, setSubject] = useState(params.get("subject") ?? "");
+  const [tlp, setTlp] = useState("amber");
+  const [caseId, setCaseId] = useState(params.get("case") ?? "");
   const [title, setTitle] = useState("");
   const [purpose, setPurpose] = useState("");
   const [subjectKind, setSubjectKind] = useState("");
@@ -74,6 +81,8 @@ export function InvestigationForm({ types, defaultType }: { types?: string[]; de
           retention_days: retention ? Number(retention) : undefined,
           default_region: region || undefined,
           options: { include_variants: variants, ai_analysis: ai, pivot_domain: true },
+          tlp,
+          case_id: caseId || undefined,
         },
       });
       router.push(`/investigations/${inv.id}`);
@@ -153,6 +162,25 @@ export function InvestigationForm({ types, defaultType }: { types?: string[]; de
       </div>
 
       <div className="space-y-6">
+        <Card title="Handling">
+          <div className="space-y-3">
+            <Field label="Sharing (TLP 2.0)" htmlFor="tlp" help="Applied to reports and STIX exports.">
+              <select id="tlp" className={inputClass} value={tlp} onChange={(e) => setTlp(e.target.value)}>
+                <option value="clear">TLP:CLEAR – no limit on disclosure</option>
+                <option value="green">TLP:GREEN – community</option>
+                <option value="amber">TLP:AMBER – organisation and clients</option>
+                <option value="amber+strict">TLP:AMBER+STRICT – organisation only</option>
+                <option value="red">TLP:RED – named recipients only</option>
+              </select>
+            </Field>
+            <Field label="Case (optional)" htmlFor="case" help="Group related investigations for a merged graph.">
+              <select id="case" className={inputClass} value={caseId} onChange={(e) => setCaseId(e.target.value)}>
+                <option value="">No case</option>
+                {cases?.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+            </Field>
+          </div>
+        </Card>
         <Card title="Options">
           <div className="space-y-3 text-sm">
             {subjectType === "username" && (

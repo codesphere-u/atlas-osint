@@ -33,6 +33,113 @@ export interface Investigation {
   progress: { done?: number; total?: number; sources?: Record<string, string> };
   finding_count: number;
   confirmed_count: number;
+  tlp: Tlp;
+  case_id: string | null;
+  parent_id: string | null;
+  monitor_interval_hours: number | null;
+  next_run_at: string | null;
+  run_count: number;
+  risk_level: RiskLevel | null;
+  posture_grade: string | null;
+}
+
+export type Tlp = "clear" | "green" | "amber" | "amber+strict" | "red";
+export type RiskLevel = "critical" | "high" | "medium" | "low" | "none";
+export type CheckStatus = "pass" | "warn" | "fail" | "info" | "unknown";
+
+export interface PostureCheck {
+  id: string;
+  category: string;
+  title: string;
+  status: CheckStatus;
+  severity: "high" | "medium" | "low";
+  detail: string;
+  recommendation: string | null;
+  reference: string | null;
+  finding_ids: string[];
+}
+
+export interface Posture {
+  score: number | null;
+  grade: string | null;
+  evaluated: number;
+  checks: PostureCheck[];
+  categories: Record<string, Record<CheckStatus, number>>;
+  methodology: string;
+}
+
+export interface Highlight {
+  severity: Exclude<RiskLevel, "none">;
+  title: string;
+  detail: string;
+  category: string;
+  finding_ids: string[];
+  confirmed: boolean;
+}
+
+export interface ChangeSet {
+  baseline: boolean;
+  compared_to: string | null;
+  added: { title: string; source: string; finding_type: string; finding_id?: string; flags?: string[] }[];
+  removed: { title: string; source: string; finding_type: string }[];
+  added_count: number;
+  removed_count: number;
+  unchanged_count: number;
+}
+
+export interface RunRecord {
+  at: string;
+  findings: number;
+  confirmed: number;
+  added: number;
+  removed: number;
+  grade: string | null;
+  trigger: "manual" | "monitor";
+}
+
+export interface Assessment {
+  posture: Posture | null;
+  risk: Highlight[];
+  changes: ChangeSet | null;
+  run_history: RunRecord[];
+  monitoring: { interval_hours: number | null; next_run_at: string | null; allowed: boolean };
+}
+
+export interface CaseSummary {
+  id: string;
+  title: string;
+  description: string;
+  status: "open" | "closed";
+  tlp: Tlp;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  investigation_count: number;
+  finding_count: number;
+  confirmed_count: number;
+  risk_level: RiskLevel;
+  subject_types: string[];
+}
+
+export interface CaseDetail extends CaseSummary {
+  investigations: Investigation[];
+}
+
+export interface Stats {
+  investigations: number;
+  by_status: Record<string, number>;
+  by_subject_type: Record<string, number>;
+  findings_by_classification: Record<string, number>;
+  findings_total: number;
+  source_status: Record<string, Record<string, number>>;
+  recent: Investigation[];
+  by_day: Record<string, number>;
+  monitored: number;
+  risk_levels: Record<string, number>;
+  posture_grades: Record<string, number>;
+  recent_changes: { investigation_id: string; title: string; at: string; added: number; removed: number; sample: string[] }[];
+  attention: (Highlight & { investigation_id: string; investigation: string })[];
+  cases: number;
 }
 
 export interface CoverageRun {
@@ -144,6 +251,8 @@ export interface TimelineEvent {
   source: string;
   date_kind: string;
   category: string;
+  investigation_id?: string | null;
+  investigation?: string | null;
 }
 
 export interface Statement {
@@ -188,6 +297,7 @@ export interface Source {
     contains_personal_data: boolean;
     requires_subject_consent: boolean;
     active_probe: boolean;
+    requires_authorized_scope?: boolean;
   };
   fields: string[];
   freshness: string;

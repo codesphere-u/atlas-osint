@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useApi } from "@/lib/hooks";
 import { fmtDate, TYPE_LABEL } from "@/lib/format";
 import type { Investigation } from "@/lib/types";
-import { Card, EmptyState, inputClass, PageHeader, Spinner, StatusPill } from "@/components/ui";
+import { Card, EmptyState, GradeBadge, inputClass, PageHeader, RiskBadge, Spinner, StatusPill, TlpBadge } from "@/components/ui";
 
 export default function HistoryPage() {
   const [q, setQ] = useState("");
@@ -39,16 +39,18 @@ export default function HistoryPage() {
         </div>
         {loading && !data ? <Spinner /> : !data?.length ? <EmptyState title="No matching investigations" /> : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="text-xs uppercase text-muted">
-                <tr><th className="py-2">Title</th><th>Type</th><th>Legal basis</th><th>Findings</th><th>Created</th><th>Retention until</th><th>Status</th></tr>
+                <tr><th className="py-2">Title</th><th>Type</th><th>TLP</th><th>Grade</th><th>Risk</th><th>Findings</th><th>Created</th><th>Retention until</th><th>Status</th></tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {data.map((i) => (
                   <tr key={i.id}>
                     <td className="py-2"><Link href={`/investigations/${i.id}`} className="text-slate-100 hover:text-accent">{i.title}</Link></td>
                     <td className="text-muted">{TYPE_LABEL[i.subject_type] ?? i.subject_type}</td>
-                    <td className="text-muted">{i.legal_basis}</td>
+                    <td><TlpBadge tlp={i.tlp} /></td>
+                    <td><GradeBadge grade={i.posture_grade} /></td>
+                    <td>{i.risk_level && i.risk_level !== "none" ? <RiskBadge level={i.risk_level} /> : <span className="text-muted">–</span>}</td>
                     <td className="font-mono">{i.finding_count} <span className="text-ok">({i.confirmed_count})</span></td>
                     <td className="text-muted">{fmtDate(i.created_at)}</td>
                     <td className="text-muted">{fmtDate(i.retention_until, false)}</td>

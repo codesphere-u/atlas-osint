@@ -29,3 +29,19 @@ describe("graph layout", () => {
     expect(run()).toEqual(run());
   });
 });
+
+import { neighbourhood, radialLayout } from "./graph-layout";
+
+describe("radial layout", () => {
+  it("places the subject at the centre and deeper nodes further out", () => {
+    const edges = [{ source: "s", target: "a" }, { source: "a", target: "b" }];
+    const pos = Object.fromEntries(radialLayout(["s", "a", "b", "z"], edges, 400, 400, ["s"]).map((n) => [n.id, n]));
+    const dist = (id: string) => Math.hypot(pos[id]!.x - 200, pos[id]!.y - 200);
+    expect(dist("s")).toBe(0);
+    expect(dist("a")).toBeLessThan(dist("b"));
+    expect(dist("b")).toBeLessThanOrEqual(dist("z"));
+  });
+  it("computes neighbourhoods", () => {
+    expect([...neighbourhood("a", [{ source: "s", target: "a" }, { source: "b", target: "c" }])].sort()).toEqual(["a", "s"]);
+  });
+});
