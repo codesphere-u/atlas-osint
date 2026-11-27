@@ -116,7 +116,11 @@ def score_findings(findings: list[Finding], correlation: CorrelationResult | Non
                 )
             )
         caps: list[tuple[float, str, str]] = []
-        if f.entity_kind == "person" and f.subject.type == IdentifierType.NAME:
+        if (
+            f.entity_kind in ("person", "publication")
+            and f.subject.type == IdentifierType.NAME
+            and (f.finding_type != "news_mention")
+        ):
             caps.append(
                 (
                     NAME_ONLY_CAP,

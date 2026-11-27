@@ -151,6 +151,8 @@ class LinkedIdentifier(BaseModel):
     identifier: Identifier
     relation: str  # e.g. "lists_website", "registrant_org", "resolves_to"
     evidence_kind: EvidenceKind = EvidenceKind.DIRECT
+    # Explicit entity key when the identifier alone is not a strong key (e.g. a parent company's LEI).
+    entity_key: str | None = None
 
 
 class Finding(BaseModel):

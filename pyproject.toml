@@ -97,7 +97,7 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "ASYNC", "RUF"]
 ignore = ["S101", "B008", "RUF012", "S311", "RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S", "B"]
+"tests/**" = ["S", "B", "E501"]
 "apps/api/atlas_api/migrations/**" = ["E501"]
 
 [tool.mypy]

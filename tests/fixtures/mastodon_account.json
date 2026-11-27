@@ -1,0 +1,24 @@
+{
+  "id": "109",
+  "username": "octo-sample",
+  "acct": "octo-sample",
+  "display_name": "Octo Sample",
+  "bot": false,
+  "created_at": "2022-11-05T00:00:00.000Z",
+  "note": "<p>Builder. <a href=\"https://octo.example.org\">site</a></p>",
+  "url": "https://mastodon.social/@octo-sample",
+  "followers_count": 42,
+  "statuses_count": 10,
+  "fields": [
+    {
+      "name": "Website",
+      "value": "<a href=\"https://octo.example.org\" rel=\"me nofollow noopener\" target=\"_blank\"><span class=\"invisible\">https://</span><span>octo.example.org</span></a>",
+      "verified_at": "2023-01-01T00:00:00.000+00:00"
+    },
+    {
+      "name": "GitHub",
+      "value": "<a href=\"https://github.com/octo-sample\" rel=\"nofollow\">github.com/octo-sample</a>",
+      "verified_at": null
+    }
+  ]
+}

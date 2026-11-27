@@ -1,0 +1,23 @@
+{
+  "cpes": [
+    "cpe:/a:apache:http_server:2.4.7",
+    "cpe:/a:openbsd:openssh:6.6.1p1"
+  ],
+  "hostnames": [
+    "example.com"
+  ],
+  "ip": "93.184.216.34",
+  "ports": [
+    22,
+    80,
+    443,
+    3306
+  ],
+  "tags": [
+    "cloud"
+  ],
+  "vulns": [
+    "CVE-2021-26690",
+    "CVE-2024-38475"
+  ]
+}

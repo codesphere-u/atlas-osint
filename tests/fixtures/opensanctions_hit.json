@@ -1,0 +1,61 @@
+{
+  "responses": {
+    "q": {
+      "status": 200,
+      "results": [
+        {
+          "id": "NK-synthetic1",
+          "caption": "Example Corp",
+          "schema": "Company",
+          "score": 0.93,
+          "match": true,
+          "datasets": [
+            "us_ofac_sdn",
+            "eu_fsf"
+          ],
+          "properties": {
+            "topics": [
+              "sanction"
+            ],
+            "country": [
+              "us"
+            ]
+          },
+          "last_change": "2026-10-01T00:00:00"
+        },
+        {
+          "id": "NK-synthetic2",
+          "caption": "Example Corporation Trading",
+          "schema": "Company",
+          "score": 0.71,
+          "match": true,
+          "datasets": [
+            "us_sam_exclusions"
+          ],
+          "properties": {
+            "topics": [
+              "debarment"
+            ]
+          },
+          "last_change": "2026-09-01T00:00:00"
+        },
+        {
+          "id": "NK-synthetic3",
+          "caption": "Exemplar Co",
+          "schema": "Company",
+          "score": 0.55,
+          "match": false,
+          "datasets": [
+            "gb_hmt_sanctions"
+          ],
+          "properties": {
+            "topics": [
+              "sanction"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "limit": 5
+}

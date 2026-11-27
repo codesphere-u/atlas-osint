@@ -68,6 +68,13 @@ class LegalInfo(BaseModel):
     contains_personal_data: bool = False
     requires_subject_consent: bool = False  # e.g. breach-notification lookups for individuals
     active_probe: bool = False  # touches infrastructure of the target -> requires authorised scope
+    # Not an active probe, but only legitimate for assets the requester owns or is authorised to assess
+    # (e.g. lookalike-domain discovery for brand protection).
+    requires_authorized_scope: bool = False
+
+    @property
+    def scope_required(self) -> bool:
+        return self.active_probe or self.requires_authorized_scope
 
 
 class SourceMetadata(BaseModel):
@@ -146,10 +153,11 @@ class SourceAdapter(ABC):
         if self.meta.legal.requires_subject_consent and scope.subject_kind == SubjectKind.INDIVIDUAL:
             if not (scope.consent_obtained or scope.legal_basis == "self"):
                 return "source requires documented consent of the individual"
-        if self.meta.legal.active_probe:
+        if self.meta.legal.scope_required:
             domain = _identifier_domain(identifier)
             if domain is None or not scope.domain_in_scope(domain):
-                return "active probing requires the target domain to be in the authorised scope"
+                what = "active probing" if self.meta.legal.active_probe else "this source"
+                return f"{what} requires the target domain to be in the authorised scope"
         return None
 
     # --------------------------------------------------------------- execution
@@ -205,9 +213,11 @@ class SourceAdapter(ABC):
         """Query the source. Raise :class:`SourceError` for expected failure modes."""
 
     # ------------------------------------------------------------------ helpers
-    async def fetch(self, ctx: CollectionContext, url: str, **kwargs: Any) -> SafeResponse:
+    async def fetch(self, ctx: CollectionContext, url: str, *, method: str = "GET", **kwargs: Any) -> SafeResponse:
         rl = self.meta.rate_limit
-        resp = await ctx.http.get(url, rate_key=self.meta.name, rate=(rl.requests, rl.per_seconds), **kwargs)
+        resp = await ctx.http.request(
+            method, url, rate_key=self.meta.name, rate=(rl.requests, rl.per_seconds), **kwargs
+        )
         if resp.status_code == 429:
             raise SourceError(AdapterStatus.RATE_LIMITED, "source rate limit reached", 429)
         if resp.status_code in (401, 403):

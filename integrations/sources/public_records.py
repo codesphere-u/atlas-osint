@@ -52,6 +52,8 @@ ORG_FIELDS = [
     "former_names",
     "parent_lei",
     "company_type",
+    "relationship",
+    "subsidiary_count",
 ]
 
 
@@ -129,6 +131,104 @@ class GleifAdapter(SourceAdapter):
                     claim_key=f"org.lei:{lei}",
                 )
             )
+        exact = [f for f in out if f.match_type == MatchType.EXACT][:2]
+        for f in exact:
+            out.extend(
+                await self._hierarchy(
+                    ctx, identifier, str(f.attributes["registry_id"]), str(f.attributes["legal_name"])
+                )
+            )
+        return out
+
+    def _org_finding(
+        self,
+        identifier: Identifier,
+        rec: dict[str, Any],
+        relationship: str,
+        title: str,
+        description: str,
+        linked: list[LinkedIdentifier],
+    ) -> Finding:
+        lei = str(rec.get("id"))
+        ent = (rec.get("attributes") or {}).get("entity") or {}
+        name = (ent.get("legalName") or {}).get("name") or lei
+        return self.finding(
+            module="public_records",
+            subject=identifier,
+            finding_type="corporate_relationship",
+            title=title.format(name=name, lei=lei),
+            description=description.format(name=name, lei=lei),
+            url=f"https://search.gleif.org/#/record/{lei}",
+            attributes={
+                "legal_name": name,
+                "registry_id": lei,
+                "id_scheme": "lei",
+                "jurisdiction": ent.get("jurisdiction"),
+                "status": ent.get("status"),
+                "relationship": relationship,
+                "registry_url": f"https://search.gleif.org/#/record/{lei}",
+            },
+            linked=linked,
+            match_type=MatchType.RELATED,
+            entity_hint=f"organization:lei:{lei}",
+            entity_kind="organization",
+            claim_key=f"org.relationship:{relationship}:{lei}",
+        )
+
+    async def _hierarchy(self, ctx: CollectionContext, identifier: Identifier, lei: str, name: str) -> list[Finding]:
+        """GLEIF Level 2 data: who owns whom (accounting consolidation), as reported by the entities."""
+        base = f"https://api.gleif.org/api/v1/lei-records/{quote(lei)}"
+        hdr = {"Accept": "application/vnd.api+json"}
+        child_link = Identifier(type=IdentifierType.ORGANIZATION, value=name)
+        out: list[Finding] = []
+        seen: set[str] = set()
+        for rel, label in (("direct-parent", "direct_parent"), ("ultimate-parent", "ultimate_parent")):
+            resp = await self.fetch(ctx, f"{base}/{rel}", headers=hdr)
+            if resp.status_code == 404 or not resp.ok:
+                continue
+            rec = resp.json().get("data") or {}
+            if not isinstance(rec, dict) or not rec.get("id") or rec["id"] in seen:
+                continue
+            seen.add(rec["id"])
+            out.append(
+                self._org_finding(
+                    identifier,
+                    rec,
+                    label,
+                    "{name} is the " + label.replace("_", " ") + f" of {name}",
+                    "GLEIF Level 2 data reports {name} (LEI {lei}) as the "
+                    + label.replace("_", " ")
+                    + f" of {name} (accounting consolidation, self-reported by the entity).",
+                    [
+                        LinkedIdentifier(
+                            identifier=child_link, relation="parent_of", entity_key=f"organization:lei:{lei}"
+                        )
+                    ],
+                )
+            )
+        resp = await self.fetch(ctx, f"{base}/direct-children", params={"page[size]": 10}, headers=hdr)
+        if resp.ok:
+            body = resp.json()
+            total = ((body.get("meta") or {}).get("pagination") or {}).get("total")
+            parent_link = Identifier(type=IdentifierType.ORGANIZATION, value=name)
+            for rec in body.get("data") or []:
+                f = self._org_finding(
+                    identifier,
+                    rec,
+                    "direct_subsidiary",
+                    "Subsidiary: {name}",
+                    "GLEIF Level 2 data reports {name} (LEI {lei}) as a direct subsidiary of "
+                    + name
+                    + (f"; {total} direct subsidiaries are reported in total." if total else "."),
+                    [
+                        LinkedIdentifier(
+                            identifier=parent_link, relation="subsidiary_of", entity_key=f"organization:lei:{lei}"
+                        )
+                    ],
+                )
+                if total:
+                    f.attributes["subsidiary_count"] = total
+                out.append(f)
         return out
 
 
@@ -564,8 +664,144 @@ def _pdf_info(data: bytes) -> dict[str, Any]:
     return out
 
 
+class OpenSanctionsAdapter(SourceAdapter):
+    """Sanctions, PEP, debarment and enforcement screening (OpenSanctions /match API)."""
+
+    THRESHOLD = 0.7
+    RISK_TOPICS = {
+        "sanction": "risk:sanction",
+        "sanction.linked": "risk:sanction",
+        "sanction.control": "risk:sanction",
+        "debarment": "risk:debarment",
+        "role.pep": "risk:pep",
+        "role.rca": "risk:pep",
+        "crime": "risk:crime",
+        "reg.action": "risk:regulatory",
+        "reg.warn": "risk:regulatory",
+        "poi": "risk:person_of_interest",
+    }
+    meta = SourceMetadata(
+        name="opensanctions",
+        display_name="OpenSanctions screening",
+        description="Screens organisations (and, with consent, people) against consolidated sanctions lists, "
+        "politically-exposed-person data, debarment and regulatory-action lists. A clear result is recorded too.",
+        category=SourceCategory.PUBLIC_RECORDS,
+        input_types=[IdentifierType.ORGANIZATION, IdentifierType.NAME],
+        access_method=AccessMethod.LICENSED_API,
+        homepage="https://www.opensanctions.org/docs/api/",
+        auth=AuthRequirement(
+            required=True,
+            kind="api_key",
+            settings_fields=["opensanctions_api_key"],
+            how_to_obtain="Request an API key at opensanctions.org (free grants for journalism, NGOs and academic "
+            "research; business use requires a data licence).",
+        ),
+        rate_limit=RateLimit(requests=2, per_seconds=1),
+        legal=LegalInfo(
+            license="CC BY-NC 4.0 (non-commercial); commercial data licence otherwise",
+            terms_url="https://www.opensanctions.org/licensing/",
+            restrictions="Name matches are possible matches, not determinations: the score measures name "
+            "similarity, not risk. Verify with registration numbers or other identifiers before acting.",
+            contains_personal_data=True,
+        ),
+        fields=[
+            "candidate_name",
+            "legal_name",
+            "opensanctions_id",
+            "schema",
+            "match_score",
+            "risk_topics",
+            "datasets",
+            "countries",
+            "last_change",
+            "screening_threshold",
+            "screened_collection",
+        ],
+        freshness="daily",
+        reliability=Reliability.B,
+        citation_format='OpenSanctions (CC BY-NC 4.0). "{title}". {url}. Retrieved {collected_at}.',
+    )
+
+    async def collect(self, identifier: Identifier, ctx: CollectionContext) -> list[Finding]:
+        is_person = identifier.type == IdentifierType.NAME
+        query = {
+            "schema": "Person" if is_person else "Company",
+            "properties": {"name": [identifier.value]},
+        }
+        resp = await self.fetch(
+            ctx,
+            "https://api.opensanctions.org/match/default",
+            method="POST",
+            params={"threshold": self.THRESHOLD, "limit": 5},
+            json_body={"queries": {"q": query}},
+            headers={"Authorization": f"ApiKey {ctx.secret('opensanctions_api_key')}"},
+        )
+        if not resp.ok:
+            raise SourceError(AdapterStatus.UNAVAILABLE, f"HTTP {resp.status_code}", resp.status_code)
+        results = (((resp.json().get("responses") or {}).get("q")) or {}).get("results") or []
+        hits = [r for r in results if r.get("match")]
+        kind = "person" if is_person else "organization"
+        if not hits:
+            return [
+                self.finding(
+                    module="public_records",
+                    subject=identifier,
+                    finding_type="sanctions_screening_clear",
+                    title=f"No sanctions/PEP match for '{identifier.value}'",
+                    description=f"OpenSanctions returned no candidate at or above the {self.THRESHOLD} match threshold "
+                    "in the default collection (sanctions, PEPs, debarments, enforcement). A clear result covers only "
+                    "the screened name spelling and the data as of the collection date.",
+                    url=f"https://www.opensanctions.org/search/?q={quote(identifier.value)}",
+                    attributes={"screening_threshold": self.THRESHOLD, "screened_collection": "default"},
+                    raw=resp.content,
+                    claim_key=f"screening.clear:{name_key(identifier.value)}",
+                )
+            ]
+        out = []
+        for r in hits:
+            props = r.get("properties") or {}
+            topics = sorted(set(props.get("topics") or []))
+            flags = sorted({self.RISK_TOPICS[t] for t in topics if t in self.RISK_TOPICS})
+            caption = str(r.get("caption") or r.get("id"))
+            attrs: dict[str, Any] = {
+                "opensanctions_id": r.get("id"),
+                "schema": r.get("schema"),
+                "match_score": r.get("score"),
+                "risk_topics": topics,
+                "datasets": (r.get("datasets") or [])[:10],
+                "last_change": r.get("last_change"),
+            }
+            attrs["candidate_name" if is_person else "legal_name"] = caption
+            if not is_person:
+                attrs["countries"] = (props.get("country") or props.get("jurisdiction") or [])[:5]
+            out.append(
+                self.finding(
+                    module="public_records",
+                    subject=identifier,
+                    finding_type="sanctions_screening_hit",
+                    title=f"Screening hit: {caption} ({', '.join(topics) or 'listed'})",
+                    description=f"OpenSanctions candidate '{caption}' matches the screened name with score "
+                    f"{r.get('score')}. Topics: {', '.join(topics) or 'none'}. Datasets: "
+                    f"{', '.join((r.get('datasets') or [])[:5])}. This is a possible match on name similarity – "
+                    "confirm with additional identifiers before drawing conclusions.",
+                    url=f"https://www.opensanctions.org/entities/{quote(str(r.get('id')))}/",
+                    attributes=attrs,
+                    match_type=MatchType.EXACT
+                    if name_key(caption) == name_key(identifier.value)
+                    else MatchType.SIMILAR,
+                    raw=resp.content,
+                    entity_hint=f"{kind}:opensanctions:{r.get('id')}",
+                    entity_kind=kind,
+                    claim_key=f"screening.hit:{r.get('id')}",
+                    flags=flags,
+                )
+            )
+        return out
+
+
 PUBLIC_RECORD_ADAPTERS = [
     GleifAdapter,
+    OpenSanctionsAdapter,
     SecEdgarAdapter,
     CompaniesHouseAdapter,
     OpenCorporatesAdapter,

@@ -35,5 +35,29 @@
   "_dmarc.acme-research.test|TXT": [],
   "acme-research.test|A": [
     "93.184.216.34"
+  ],
+  "_mta-sts.example.com|TXT": [
+    "v=STSv1; id=20260101"
+  ],
+  "_smtp._tls.example.com|TXT": [
+    "v=TLSRPTv1; rua=mailto:tlsrpt@example.com"
+  ],
+  "example.com|DS": [
+    "31589 8 2 3490A6806D47F17A34C29E2CE80E8A999FFBE4BE"
+  ],
+  "selector1._domainkey.example.com|TXT": [
+    "v=DKIM1; k=rsa; p=MIIBIjANBgkq"
+  ],
+  "examp1e.com|A": [
+    "203.0.113.10"
+  ],
+  "examp1e.com|MX": [
+    "10 mail.examp1e.com."
+  ],
+  "example.net|A": [
+    "203.0.113.20"
+  ],
+  "exampel.com|MX": [
+    "0 ."
   ]
 }

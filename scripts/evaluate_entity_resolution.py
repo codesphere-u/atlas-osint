@@ -79,8 +79,8 @@ def evaluate(records: list[dict]) -> dict:
     per_kind = {}
     for kind, recs in groups.items():
         findings, truth = to_findings(recs)
-        subject = findings[0].subject
-        corr = resolve(findings, subject)
+        subjects = list({f.subject.key: f.subject for f in findings}.values())
+        corr = resolve(findings, subjects[0], subjects[1:])
         predicted = {}
         for e in corr.entities:
             for fid in e.finding_ids:

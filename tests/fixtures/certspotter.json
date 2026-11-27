@@ -1,0 +1,28 @@
+[
+  {
+    "id": "1",
+    "dns_names": [
+      "example.com",
+      "www.example.com"
+    ],
+    "issuer": {
+      "friendly_name": "Sectigo",
+      "name": "C=GB, O=Sectigo Limited"
+    },
+    "not_before": "2026-01-01T00:00:00Z",
+    "not_after": "2027-01-01T00:00:00Z"
+  },
+  {
+    "id": "2",
+    "dns_names": [
+      "api.example.com",
+      "*.dev.example.com"
+    ],
+    "issuer": {
+      "friendly_name": "Let's Encrypt",
+      "name": "C=US, O=Let's Encrypt"
+    },
+    "not_before": "2026-09-01T00:00:00Z",
+    "not_after": "2026-12-01T00:00:00Z"
+  }
+]

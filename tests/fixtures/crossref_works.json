@@ -1,0 +1,80 @@
+{
+  "status": "ok",
+  "message": {
+    "items": [
+      {
+        "DOI": "10.5555/SYNTH.001",
+        "title": [
+          "Graph methods for synthetic data"
+        ],
+        "author": [
+          {
+            "given": "Maria",
+            "family": "Example",
+            "ORCID": "https://orcid.org/0000-0002-1825-0097"
+          },
+          {
+            "given": "John",
+            "family": "Sample"
+          }
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2021,
+              5,
+              1
+            ]
+          ]
+        },
+        "container-title": [
+          "Journal of Synthetic Studies"
+        ],
+        "type": "journal-article"
+      },
+      {
+        "DOI": "10.5555/SYNTH.002",
+        "title": [
+          "Painting in the fictional age"
+        ],
+        "author": [
+          {
+            "given": "María",
+            "family": "Example"
+          }
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2019
+            ]
+          ]
+        },
+        "container-title": [
+          "Fictional Arts"
+        ],
+        "type": "journal-article"
+      },
+      {
+        "DOI": "10.5555/SYNTH.003",
+        "title": [
+          "Unrelated fuzzy hit"
+        ],
+        "author": [
+          {
+            "given": "Marianne",
+            "family": "Examples"
+          }
+        ],
+        "published": {
+          "date-parts": [
+            [
+              2020
+            ]
+          ]
+        },
+        "type": "journal-article"
+      }
+    ]
+  }
+}

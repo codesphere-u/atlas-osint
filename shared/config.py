@@ -66,6 +66,17 @@ class Settings(BaseSettings):
     companies_house_api_key: SecretStr | None = None
     opencorporates_api_token: SecretStr | None = None
     numverify_api_key: SecretStr | None = None
+    opensanctions_api_key: SecretStr | None = None
+    certspotter_api_key: SecretStr | None = None  # optional; raises the anonymous rate limit
+    fediverse_instances: Annotated[list[str], NoDecode] = Field(default_factory=lambda: ["mastodon.social"])
+    lookalike_max_candidates: int = 150
+    # DNS backend: "system" (host resolvers) or "doh" (DNS-over-HTTPS JSON API; use where port 53 is filtered)
+    dns_resolver: Literal["system", "doh"] = "system"
+    doh_url: str = "https://dns.google/resolve"
+
+    # --- scheduling (inline backend only; Celery beat handles this when task_backend=celery) ---
+    inline_scheduler: bool = True
+    scheduler_interval_seconds: int = 60
 
     # --- AI analysis -------------------------------------------------------------
     ai_provider: Literal["none", "anthropic", "openai_compatible"] = "none"
@@ -75,7 +86,7 @@ class Settings(BaseSettings):
     openai_compatible_api_key: SecretStr | None = None
     ai_max_findings: int = 200
 
-    @field_validator("cors_origins", "http_allowed_ports", mode="before")
+    @field_validator("cors_origins", "http_allowed_ports", "fediverse_instances", mode="before")
     @classmethod
     def _split_csv(cls, v: object) -> object:
         if isinstance(v, str):

@@ -1,0 +1,9 @@
+{
+  "did": "did:plc:synthetic000000000000000",
+  "handle": "octo.example.org",
+  "displayName": "Octo Sample",
+  "description": "Builder. https://octo.example.org",
+  "createdAt": "2023-05-01T00:00:00.000Z",
+  "followersCount": 12,
+  "postsCount": 3
+}

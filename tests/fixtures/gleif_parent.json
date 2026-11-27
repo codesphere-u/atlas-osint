@@ -1,0 +1,16 @@
+{
+  "data": {
+    "type": "lei-records",
+    "id": "5493000PARENT0000001",
+    "attributes": {
+      "lei": "5493000PARENT0000001",
+      "entity": {
+        "legalName": {
+          "name": "Example Holdings PLC"
+        },
+        "jurisdiction": "GB",
+        "status": "ACTIVE"
+      }
+    }
+  }
+}

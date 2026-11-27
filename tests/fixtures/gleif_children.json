@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "pagination": {
+      "total": 2
+    }
+  },
+  "data": [
+    {
+      "type": "lei-records",
+      "id": "5493000CHILD00000001",
+      "attributes": {
+        "lei": "5493000CHILD00000001",
+        "entity": {
+          "legalName": {
+            "name": "Example Corp Europe GmbH"
+          },
+          "jurisdiction": "DE",
+          "status": "ACTIVE"
+        }
+      }
+    },
+    {
+      "type": "lei-records",
+      "id": "5493000CHILD00000002",
+      "attributes": {
+        "lei": "5493000CHILD00000002",
+        "entity": {
+          "legalName": {
+            "name": "Example Corp Asia Ltd"
+          },
+          "jurisdiction": "SG",
+          "status": "ACTIVE"
+        }
+      }
+    }
+  ]
+}

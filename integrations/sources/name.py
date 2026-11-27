@@ -18,6 +18,7 @@ from integrations.sources.base import (
     SourceAdapter,
     SourceError,
     SourceMetadata,
+    parse_datetime,
 )
 from shared.types import (
     AccessMethod,
@@ -341,4 +342,115 @@ def _claim_time(claims: list[dict[str, Any]] | None) -> str | None:
 
 
 # Re-export for adapters that only need URL normalisation.
-__all__ = ["OpenAlexAuthorsAdapter", "OrcidAdapter", "WikidataAdapter", "try_normalize"]
+__all__ = ["CrossrefWorksAdapter", "OpenAlexAuthorsAdapter", "OrcidAdapter", "WikidataAdapter", "try_normalize"]
+
+
+class CrossrefWorksAdapter(SourceAdapter):
+    """Scholarly works whose author list contains the searched name (Crossref REST API)."""
+
+    meta = SourceMetadata(
+        name="crossref",
+        display_name="Crossref works index",
+        description="Publication metadata (DOI, title, venue, year, co-author count) for works listing an author "
+        "with the searched name. Author ORCID iDs, when deposited, link works to researcher records.",
+        category=SourceCategory.ACADEMIC,
+        input_types=[IdentifierType.NAME],
+        access_method=AccessMethod.PUBLIC_API,
+        homepage="https://api.crossref.org/swagger-ui/index.html",
+        rate_limit=RateLimit(requests=5, per_seconds=1, notes="public pool; be polite"),
+        legal=LegalInfo(
+            license="Metadata is free to reuse (Crossref: facts, no rights reserved)",
+            terms_url="https://www.crossref.org/documentation/retrieve-metadata/rest-api/",
+            restrictions="Bibliographic metadata only; abstracts and full text are not collected.",
+            contains_personal_data=True,
+        ),
+        fields=[
+            "publication_title",
+            "doi",
+            "year",
+            "venue",
+            "work_type",
+            "author_position",
+            "coauthor_count",
+            "author_orcid",
+            "candidate_name",
+        ],
+        freshness="daily",
+        reliability=Reliability.B,
+    )
+
+    async def collect(self, identifier: Identifier, ctx: CollectionContext) -> list[Finding]:
+        resp = await self.fetch(
+            ctx,
+            "https://api.crossref.org/works",
+            params={
+                "query.author": identifier.value,
+                "rows": 10,
+                "select": "DOI,title,author,published,container-title,type",
+            },
+        )
+        if not resp.ok:
+            raise SourceError(AdapterStatus.UNAVAILABLE, f"HTTP {resp.status_code}", resp.status_code)
+        items = ((resp.json().get("message") or {}).get("items")) or []
+        target = name_key(identifier.value)
+        out: list[Finding] = []
+        for item in items:
+            authors = item.get("author") or []
+            best = None
+            for pos, a in enumerate(authors, start=1):
+                full = " ".join(p for p in (a.get("given"), a.get("family")) if p)
+                if full and name_key(full) == target:
+                    best = (pos, a, full)
+                    break
+            if best is None:
+                continue  # fuzzy hit without an author of that name – not evidence about the name
+            pos, author, full = best
+            doi = str(item.get("DOI") or "").lower()
+            if not doi:
+                continue
+            title = ((item.get("title") or [""])[0] or "Untitled")[:300]
+            parts = ((item.get("published") or {}).get("date-parts") or [[None]])[0]
+            year = parts[0] if parts else None
+            orcid = (author.get("ORCID") or "").rsplit("/", 1)[-1] or None
+            linked = []
+            if orcid:
+                linked.append(
+                    LinkedIdentifier(
+                        identifier=Identifier(type=IdentifierType.URL, value=f"https://orcid.org/{orcid}"),
+                        relation="authored_by",
+                    )
+                )
+            out.append(
+                self.finding(
+                    module="name",
+                    subject=identifier,
+                    finding_type="publication",
+                    title=title,
+                    description=f"Publication ({item.get('type') or 'work'}, {year or 'n.d.'}) listing '{full}' as "
+                    f"author #{pos} of {len(authors)}."
+                    + (
+                        f" The author entry carries ORCID {orcid}."
+                        if orcid
+                        else " No ORCID deposited; the author may be a namesake."
+                    ),
+                    url=f"https://doi.org/{doi}",
+                    attributes={
+                        "publication_title": title,
+                        "doi": doi,
+                        "year": year,
+                        "venue": ((item.get("container-title") or [None])[0]),
+                        "work_type": item.get("type"),
+                        "author_position": pos,
+                        "coauthor_count": max(0, len(authors) - 1),
+                        "author_orcid": orcid,
+                        "candidate_name": full,
+                    },
+                    linked=linked,
+                    match_type=MatchType.EXACT,
+                    published_at=parse_datetime(f"{year}-01-01") if year else None,
+                    entity_hint=f"publication:doi:{doi}",
+                    entity_kind="publication",
+                    claim_key=f"publication.author:{doi}={target}",
+                )
+            )
+        return out

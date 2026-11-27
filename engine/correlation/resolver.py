@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from collections.abc import Sequence
 from typing import Any
 
 from engine.normalization.identifiers import name_key
@@ -29,6 +30,7 @@ from shared.types import (
     Finding,
     Identifier,
     IdentifierType,
+    LinkedIdentifier,
     MatchType,
     NameCollision,
     Relationship,
@@ -126,20 +128,36 @@ def _norm_value(attr: str, value: Any) -> str:
     return text
 
 
-def resolve(findings: list[Finding], subject: Identifier) -> CorrelationResult:
+def linked_key(li: LinkedIdentifier) -> str:
+    return li.entity_key or identifier_key(li.identifier)
+
+
+def resolve(
+    findings: list[Finding], subject: Identifier, extra_subjects: Sequence[Identifier] = ()
+) -> CorrelationResult:
+    """Resolve entities. ``extra_subjects`` lets a case merge several investigations into one graph."""
     uf = _UnionFind()
-    subject_key = identifier_key(subject)
-    uf.find(subject_key)
-    labels: dict[str, str] = {subject_key: subject.value}
+    subjects: dict[str, Identifier] = {}
+    for s in (subject, *extra_subjects):
+        subjects.setdefault(identifier_key(s), s)
+    labels: dict[str, str] = {}
     identifiers: dict[str, list[Identifier]] = defaultdict(list)
-    identifiers[subject_key].append(subject)
+    for skey, s in subjects.items():
+        uf.find(skey)
+        labels[skey] = s.value
+        identifiers[skey].append(s)
     finding_keys: dict[str, list[str]] = defaultdict(list)  # key -> finding ids
     attrs_by_key: dict[str, dict[str, Any]] = defaultdict(dict)
     profile_urls: dict[str, str] = {}  # canonical profile url -> key
 
     # 1) Collect strong keys from findings.
     for f in findings:
-        key = f.entity_hint or subject_key
+        fs_key = identifier_key(f.subject)
+        if fs_key not in uf.parent:
+            uf.find(fs_key)
+            labels.setdefault(fs_key, f.subject.value)
+            identifiers[fs_key].append(f.subject)
+        key = f.entity_hint or fs_key
         uf.find(key)
         finding_keys[key].append(f.id)
         a = f.attributes
@@ -161,7 +179,7 @@ def resolve(findings: list[Finding], subject: Identifier) -> CorrelationResult:
             if k in a:
                 attrs_by_key[key].setdefault(k, a[k])
         for li in f.linked:
-            lk = identifier_key(li.identifier)
+            lk = linked_key(li)
             uf.find(lk)
             identifiers[lk].append(li.identifier)
             labels.setdefault(lk, li.identifier.value)
@@ -182,8 +200,9 @@ def resolve(findings: list[Finding], subject: Identifier) -> CorrelationResult:
     key_to_entity: dict[str, str] = {}
     for _root, keys in sorted(groups.items()):
         primary = sorted(keys, key=lambda k: (k.startswith("url:"), k))[0]
-        is_subject = subject_key in keys
-        kind = _SUBJECT_KIND[subject.type] if is_subject else _kind_for_key(primary)
+        subject_hits = [subjects[k] for k in keys if k in subjects]
+        is_subject = bool(subject_hits)
+        kind = _SUBJECT_KIND[subject_hits[0].type] if is_subject else _kind_for_key(primary)
         ids = sorted({i.key: i for k in keys for i in identifiers.get(k, [])}.values(), key=lambda i: i.key)
         fids = sorted({fid for k in keys for fid in finding_keys.get(k, [])})
         label = next((labels[k] for k in sorted(keys) if k in labels and not k.startswith("url:")), None) or labels.get(
@@ -205,7 +224,6 @@ def resolve(findings: list[Finding], subject: Identifier) -> CorrelationResult:
         for k in keys:
             key_to_entity[k] = ent.id
 
-    subject_entity = key_to_entity[subject_key]
     by_id = {f.id: f for f in findings}
     rels: dict[tuple[str, str, str], Relationship] = {}
 
@@ -223,12 +241,13 @@ def resolve(findings: list[Finding], subject: Identifier) -> CorrelationResult:
 
     # 4) Relationships: subject -> entity, entity -> linked identifiers.
     for f in findings:
-        eid = key_to_entity[f.entity_hint or subject_key]
+        subject_entity = key_to_entity[identifier_key(f.subject)]
+        eid = key_to_entity[f.entity_hint or identifier_key(f.subject)]
         if eid != subject_entity:
-            rtype, kind, why = _subject_relation(f, subject)
+            rtype, kind, why = _subject_relation(f, f.subject)
             add_rel(subject_entity, eid, rtype, kind, f.id, why)
         for li in f.linked:
-            target = key_to_entity[identifier_key(li.identifier)]
+            target = key_to_entity[linked_key(li)]
             add_rel(
                 eid,
                 target,
@@ -355,6 +374,15 @@ def _subject_relation(f: Finding, subject: Identifier) -> tuple[str, EvidenceKin
                 "prove the same owner",
             )
         return ("handle_similar", EvidenceKind.INFERENCE, "Account handle is similar, not identical")
+    if f.entity_kind == "organization" and f.match_type == MatchType.RELATED:
+        rel = str(f.attributes.get("relationship") or "related_organization")
+        return (rel, EvidenceKind.DIRECT, f"{f.source_display_name} reports this corporate relationship")
+    if f.finding_type == "sanctions_screening_hit":
+        return (
+            "screening_candidate",
+            EvidenceKind.INFERENCE,
+            "Watch-list candidate matched on name similarity; requires confirmation with other identifiers",
+        )
     if f.entity_kind in ("person", "organization"):
         if f.match_type == MatchType.EXACT:
             return (
@@ -363,6 +391,12 @@ def _subject_relation(f: Finding, subject: Identifier) -> tuple[str, EvidenceKin
                 "Record name matches the searched name; a name match is not an identity match",
             )
         return ("similar_name", EvidenceKind.INFERENCE, "Record name is similar to the searched name")
+    if f.entity_kind == "publication" and f.finding_type == "publication":
+        return (
+            "name_in_author_list",
+            EvidenceKind.INFERENCE,
+            "The searched name appears in the author list; a name match is not an identity match",
+        )
     if f.entity_kind == "publication":
         return ("mentioned_in", EvidenceKind.INFERENCE, "Exact phrase appears in the publication")
     if "pivot:email_domain" in f.flags:
