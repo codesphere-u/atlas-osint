@@ -1,14 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useState } from "react";
 import { api, ApiError } from "./api";
 
 export function useApi<T>(path: string | null, opts: { pollMs?: number; until?: (d: T) => boolean } = {}) {
   const [data, setData] = useState<T | undefined>(undefined);
   const [error, setError] = useState<ApiError | null>(null);
-  const [loading, setLoading] = useState<boolean>(!!path);
-  const untilRef = useRef(opts.until);
-  untilRef.current = opts.until;
+  // Loading means "no response yet for the current path"; derived, so a path change needs no state reset.
+  const [answeredPath, setAnsweredPath] = useState<string | null>(null);
+  const loading = !!path && answeredPath !== path;
+  // Always sees the latest `until` callback without restarting the polling effect.
+  const isDone = useEffectEvent((d: T) => opts.until?.(d) ?? false);
 
   const load = useCallback(async () => {
     if (!path) return;
@@ -20,7 +22,7 @@ export function useApi<T>(path: string | null, opts: { pollMs?: number; until?: 
     } catch (e) {
       setError(e instanceof ApiError ? e : new ApiError(0, String(e)));
     } finally {
-      setLoading(false);
+      setAnsweredPath(path);
     }
   }, [path]);
 
@@ -30,10 +32,9 @@ export function useApi<T>(path: string | null, opts: { pollMs?: number; until?: 
     const tick = async () => {
       const d = await load();
       if (cancelled || !opts.pollMs) return;
-      if (d !== undefined && untilRef.current?.(d)) return;
+      if (d !== undefined && isDone(d)) return;
       timer = setTimeout(tick, opts.pollMs);
     };
-    setLoading(!!path);
     void tick();
     return () => {
       cancelled = true;

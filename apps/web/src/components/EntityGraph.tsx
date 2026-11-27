@@ -4,7 +4,7 @@ import {
   AtSign, Building2, Download, FileText, Fingerprint, Globe, Image as ImageIcon, Link2, Mail, Maximize, Minus, Network,
   Newspaper, Orbit, Phone, Plus, Search, Server, UserRound,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ComponentType, type PointerEvent as RPointerEvent, type WheelEvent } from "react";
+import { useMemo, useRef, useState, type ComponentType, type PointerEvent as RPointerEvent, type WheelEvent } from "react";
 import { initialPositions, neighbourhood, radialLayout, simulate, type LayoutNode } from "@/lib/graph-layout";
 import { humanize, pct } from "@/lib/format";
 import type { Graph, GraphNode } from "@/lib/types";
@@ -56,12 +56,17 @@ export function EntityGraph({ graph, onSelect, selectedId }: { graph: Graph; onS
     return simulate(init, layoutEdges, W, H);
   }, [nodes, layoutEdges, layoutMode]);
 
-  const [pos, setPos] = useState<Record<string, LayoutNode>>({});
+  // Positions come from the layout; nodes the analyst drags are stored as overrides for that layout only, so a
+  // new layout (mode switch, filter change) starts clean without a reset effect.
+  const [dragged, setDragged] = useState<{ layout: LayoutNode[]; moved: Record<string, { x: number; y: number }> }>({ layout, moved: {} });
+  const pos = useMemo<Record<string, LayoutNode>>(() => {
+    const moved = dragged.layout === layout ? dragged.moved : {};
+    return Object.fromEntries(layout.map((n) => [n.id, moved[n.id] ? { ...n, ...moved[n.id] } : n]));
+  }, [layout, dragged]);
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
   const [hoverEdge, setHoverEdge] = useState<string | null>(null);
   const drag = useRef<{ id?: string; panX?: number; panY?: number; startX: number; startY: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  useEffect(() => setPos(Object.fromEntries(layout.map((n) => [n.id, { ...n }]))), [layout]);
 
   const byId = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph]);
   const matches = useMemo(() => {
@@ -88,7 +93,9 @@ export function EntityGraph({ graph, onSelect, selectedId }: { graph: Graph; onS
     if (d.id) {
       const x = (p.x - view.x) / view.k;
       const y = (p.y - view.y) / view.k;
-      setPos((prev) => (prev[d.id!] ? { ...prev, [d.id!]: { ...prev[d.id!]!, x, y } } : prev));
+      const id = d.id;
+      if (!pos[id]) return;
+      setDragged((prev) => ({ layout, moved: { ...(prev.layout === layout ? prev.moved : {}), [id]: { x, y } } }));
     } else {
       setView((v) => ({ ...v, x: (d.panX ?? 0) + (p.x - d.startX), y: (d.panY ?? 0) + (p.y - d.startY) }));
     }

@@ -47,7 +47,7 @@ not an independent third-party penetration test**; one is recommended before hig
 |---|---|---|---|
 | A-01 | Medium | Per-credential API rate limiting could be bypassed by rotating random bearer tokens (each got a new bucket). | **Fixed** – additional per-IP ceiling; regression test. |
 | A-02 | Medium | Opt-out of a domain did not suppress website URLs on that domain linked from profiles. | **Fixed** – URL identifiers also match their host domain; test. |
-| A-03 | High (dependency) | PostCSS bundled with Next.js 15 affected by GHSA-qx2v-qp2m-jg93 and related advisories. | **Fixed** – `overrides` pins postcss 8.5.33; `npm audit` clean. |
+| A-03 | High (dependency) | PostCSS bundled with Next.js 15 affected by GHSA-qx2v-qp2m-jg93 and related advisories. | **Fixed** – `overrides` pinned postcss 8.5.33. Since the Next.js 16 upgrade the bundled PostCSS (8.5.23) is unaffected, so the override was removed; `npm audit` clean. |
 | A-04 | Medium | Policy filter did not treat `api_key`/`access_key` attribute names as credentials. | **Fixed** – added to always-forbidden keys; test. |
 | A-05 | Low | Injection detector missed forged `</untrusted_data>` tags and `SYSTEM:` prefixes. | **Fixed** – pattern extended; tests. |
 | A-06 | High (Bandit B613) | Sanitiser regex contained literal bidi control characters in source ("Trojan Source"). | **Fixed** – ASCII escape sequences only. |

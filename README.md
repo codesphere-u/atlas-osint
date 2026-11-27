@@ -6,7 +6,7 @@
 [![CodeQL](https://github.com/codesphere-u/atlas-osint/actions/workflows/codeql.yml/badge.svg)](https://github.com/codesphere-u/atlas-osint/actions/workflows/codeql.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
-![Next.js 15](https://img.shields.io/badge/Next.js-15-black)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black)
 ![STIX 2.1](https://img.shields.io/badge/export-STIX_2.1-6a4ce2)
 
 ATLAS OSINT is a self-hosted intelligence platform for **lawful, authorised** open-source investigations. Give it a

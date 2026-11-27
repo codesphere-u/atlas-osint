@@ -37,6 +37,9 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown 
   const res = await fetch(path, { ...init, method, headers, body, credentials: "same-origin", cache: "no-store" });
   if (res.status === 401 && typeof window !== "undefined" && !path.endsWith("/auth/login")) {
     const next = encodeURIComponent(window.location.pathname + window.location.search);
+    // Deliberately a full page load, not a router push: an expired session must also discard every piece of
+    // investigation data held in client memory. This helper runs outside React, so there is no router here.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.assign(`/login?next=${next}`);
   }
   if (!res.ok) {

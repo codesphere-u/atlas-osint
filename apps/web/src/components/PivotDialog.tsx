@@ -2,7 +2,7 @@
 
 import { GitBranch } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { TYPE_LABEL } from "@/lib/format";
 import { useToast } from "@/lib/toast";
@@ -24,23 +24,20 @@ export function pivotTarget(type: string, value: string): PivotTarget | null {
 }
 
 export function PivotDialog({ investigationId, target, onClose }: { investigationId: string; target: PivotTarget | null; onClose: () => void }) {
+  if (!target) return null;
+  // Keyed by target: each pivot starts from a clean form (confirmation unticked, no stale consent reference).
+  return <PivotForm key={`${target.type}:${target.value}`} investigationId={investigationId} target={target} onClose={onClose} />;
+}
+
+function PivotForm({ investigationId, target, onClose }: { investigationId: string; target: PivotTarget; onClose: () => void }) {
   const router = useRouter();
   const toast = useToast();
-  const [type, setType] = useState("domain");
-  const [value, setValue] = useState("");
+  const [type, setType] = useState(target.type);
+  const [value, setValue] = useState(target.value);
   const [covered, setCovered] = useState(false);
   const [consentRef, setConsentRef] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (target) {
-      setType(target.type);
-      setValue(target.value);
-      setCovered(false);
-      setErrors([]);
-    }
-  }, [target]);
 
   async function submit() {
     setBusy(true);
@@ -61,7 +58,7 @@ export function PivotDialog({ investigationId, target, onClose }: { investigatio
   }
 
   return (
-    <Modal open={!!target} onClose={onClose} title="Pivot to a new investigation">
+    <Modal open onClose={onClose} title="Pivot to a new investigation">
       <div className="space-y-4">
         <p className="flex items-start gap-2 text-sm text-muted">
           <GitBranch className="mt-0.5 h-4 w-4 shrink-0 text-accent" />

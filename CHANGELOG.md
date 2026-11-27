@@ -5,6 +5,20 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Web dashboard upgraded to **Next.js 16.4** (Turbopack builds) and **ESLint 10** with the native flat configs of
+  `eslint-config-next` (no `FlatCompat`). `middleware.ts` is now `proxy.ts`. The PostCSS override is no longer
+  needed and was removed.
+- Components refactored for the React Compiler-era `react-hooks` rules: no state updates inside effects and no ref
+  writes during render. The command palette and pivot dialog remount per opening; graph drag positions are
+  overrides tied to the current layout; the sidebar preference is read with `useSyncExternalStore`; `useApi`
+  derives its loading state and uses `useEffectEvent` for its stop condition.
+
+### Fixed
+- Pivot dialog kept the consent reference typed for a previous pivot.
+- Entity graph rendered one empty frame before positions were set.
+- `useApi` could report "loaded" for a new path when a slower response for the previous path arrived first.
+
 ## [0.2.0] - 2026-11-27
 
 ### Added

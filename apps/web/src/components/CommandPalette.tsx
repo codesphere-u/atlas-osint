@@ -30,6 +30,11 @@ const NAV = [
 ];
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
+  // Mounting the dialog on open gives every opening a fresh query and selection.
+  return open ? <PaletteDialog onClose={onClose} /> : null;
+}
+
+function PaletteDialog({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
@@ -38,13 +43,10 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!open) return;
-    setQ("");
-    setActive(0);
-    setTimeout(() => input.current?.focus(), 0);
+    input.current?.focus();
     api<Investigation[]>("/api/v1/investigations?limit=50").then(setInvs).catch(() => undefined);
     api<CaseSummary[]>("/api/v1/cases").then(setCases).catch(() => undefined);
-  }, [open]);
+  }, []);
 
   const items = useMemo<Item[]>(() => {
     const go = (href: string) => () => { onClose(); router.push(href); };
@@ -75,9 +77,6 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     return out;
   }, [q, invs, cases, onClose, router]);
 
-  useEffect(() => setActive(0), [q]);
-  if (!open) return null;
-
   return (
     <div className="fixed inset-0 z-[55] flex items-start justify-center bg-black/60 p-4 pt-[12vh] backdrop-blur-sm"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -85,7 +84,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         className="w-full max-w-xl overflow-hidden rounded-xl border border-line bg-ink-900 shadow-2xl">
         <div className="flex items-center gap-2 border-b border-line px-4">
           <Search className="h-4 w-4 text-muted" aria-hidden />
-          <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} role="combobox" aria-expanded="true"
+          <input ref={input} value={q} onChange={(e) => { setQ(e.target.value); setActive(0); }} role="combobox" aria-expanded="true"
             aria-controls="cmdk-list" aria-activedescendant={items[active]?.id}
             placeholder="Type an identifier to investigate, or search…"
             className="h-12 flex-1 bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"

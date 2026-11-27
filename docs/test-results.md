@@ -19,7 +19,8 @@ the same checks on every push. v0.1.0 results (2026-11-26) are summarised at the
 | Migration 0001 → 0002 on a populated PostgreSQL 16 database | upgrade, downgrade, re-upgrade succeed; existing rows get TLP:AMBER, `run_count` 0 |
 | STIX bundles | parse with `stix2.parse(..., allow_custom=False)` |
 | Source coverage document | regenerated, 40 adapters |
-| Web: `tsc --noEmit`, ESLint, Vitest (19 tests), `next build` (17 routes) | all pass |
+| Web: `tsc --noEmit`, ESLint, Vitest (19 tests), `next build` (17 routes) | all pass (re-run after the Next.js 16 / ESLint 10 upgrade) |
+| Next.js 16 browser smoke test (standalone server) | proxy redirect and `?next=`, sidebar preference across reloads, command palette reset, graph drag and layout reset, pivot dialog reset, mobile menu closes on navigation, polling stops on completion, 401 → login; 0 console or hydration errors |
 | npm audit (production deps) | 0 vulnerabilities |
 | Docker Compose stack | not re-run for v0.2 (no Docker daemon in this environment); Dockerfiles unchanged since the verified v0.1 run, Compose only gained pass-through variables |
 | Browser walkthrough (Playwright, live sources, DoH resolver) | ⌘K palette → domain investigation → findings (keyboard navigation, bulk verify) → exposure scorecard → graph (force/radial, focus, export) → timeline → pivot from a linked identifier → re-run with change detection → monitoring → STIX/PDF/HTML/JSON/CSV exports → organisation with GLEIF hierarchy → cases (merged graph) → overview → history, sources, admin, mobile; 0 console errors |

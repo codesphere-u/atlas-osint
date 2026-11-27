@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { api } from "@/lib/api";
 import { ToastProvider } from "@/lib/toast";
 import type { User } from "@/lib/types";
@@ -48,27 +48,54 @@ const NAV: { section: string; items: NavItem[] }[] = [
   },
 ];
 
+// Sidebar preference as a tiny external store: read with useSyncExternalStore so the server render and the first
+// client render agree (expanded), then the stored preference applies; other tabs stay in sync via "storage".
+const SIDEBAR_KEY = "atlas.sidebar";
+const sidebarListeners = new Set<() => void>();
+let collapsedInMemory = false; // used when storage is blocked
+
 function readCollapsed(): boolean {
   try {
-    return window.localStorage.getItem("atlas.sidebar") === "collapsed";
+    const stored = window.localStorage.getItem(SIDEBAR_KEY);
+    return stored === null ? collapsedInMemory : stored === "collapsed";
   } catch {
-    return false;
+    return collapsedInMemory;
   }
+}
+
+function writeCollapsed(collapsed: boolean) {
+  collapsedInMemory = collapsed;
+  try {
+    window.localStorage.setItem(SIDEBAR_KEY, collapsed ? "collapsed" : "expanded");
+  } catch {
+    /* storage unavailable: preference lasts until reload */
+  }
+  sidebarListeners.forEach((l) => l());
+}
+
+function subscribeSidebar(onChange: () => void) {
+  sidebarListeners.add(onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    sidebarListeners.delete(onChange);
+    window.removeEventListener("storage", onChange);
+  };
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  // The mobile menu is open for the path it was opened on, so navigating closes it.
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const open = openOn === pathname;
+  const setOpen = (value: boolean) => setOpenOn(value ? pathname : null);
+  const collapsed = useSyncExternalStore(subscribeSidebar, readCollapsed, () => false);
   const [palette, setPalette] = useState(false);
 
   useEffect(() => {
     api<User>("/api/v1/auth/me").then(setUser).catch(() => undefined);
-    setCollapsed(readCollapsed());
   }, []);
-  useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const typing = e.target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
@@ -85,14 +112,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   function toggleCollapsed() {
-    setCollapsed((c) => {
-      try {
-        window.localStorage.setItem("atlas.sidebar", c ? "expanded" : "collapsed");
-      } catch {
-        /* storage unavailable: preference is per-session only */
-      }
-      return !c;
-    });
+    writeCollapsed(!collapsed);
   }
 
   async function logout() {
