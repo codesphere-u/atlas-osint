@@ -25,7 +25,20 @@ def snapshot(findings: list[Finding]) -> list[dict[str, str]]:
     ]
 
 
-def diff(previous: list[dict[str, str]] | None, current: list[Finding], compared_to: str | None) -> dict[str, Any]:
+def diff(
+    previous: list[dict[str, str]] | None,
+    current: list[Finding],
+    compared_to: str | None,
+    *,
+    previous_answered: set[str] | None = None,
+    current_answered: set[str] | None = None,
+) -> dict[str, Any]:
+    """Compare two runs.
+
+    Only sources that answered in *both* runs are compared: a source that was unavailable or rate-limited in
+    one run would otherwise make all of its findings look added or removed. Those sources are listed in
+    ``not_compared`` so the analyst knows the comparison is partial.
+    """
     if previous is None:
         return {
             "baseline": True,
@@ -36,8 +49,15 @@ def diff(previous: list[dict[str, str]] | None, current: list[Finding], compared
             "removed_count": 0,
             "unchanged_count": len(current),
         }
-    prev = {p["sig"]: p for p in previous}
-    cur = {signature(f): f for f in current}
+    comparable: set[str] | None = None
+    if previous_answered is not None and current_answered is not None:
+        comparable = previous_answered & current_answered
+
+    def keep(sig: str) -> bool:
+        return comparable is None or sig.split("|", 1)[0] in comparable
+
+    prev = {p["sig"]: p for p in previous if keep(p["sig"])}
+    cur = {signature(f): f for f in current if keep(signature(f))}
     added = [
         {
             "title": f.title,
@@ -62,4 +82,7 @@ def diff(previous: list[dict[str, str]] | None, current: list[Finding], compared
         "added_count": len(added),
         "removed_count": len(removed),
         "unchanged_count": len(set(cur) & set(prev)),
+        "not_compared": sorted((previous_answered or set()) ^ (current_answered or set()))
+        if comparable is not None
+        else [],
     }

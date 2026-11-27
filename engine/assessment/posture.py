@@ -401,11 +401,7 @@ def assess_posture(findings: list[Finding], now: datetime | None = None) -> Post
         )
 
     possible = sum(WEIGHTS[c.severity] for c in checks if c.status in ("pass", "warn", "fail"))
-    earned = sum(
-        WEIGHTS[c.severity] * STATUS_FACTOR[c.status]
-        for c in checks
-        if c.status in ("pass", "warn", "fail")
-    )
+    earned = sum(WEIGHTS[c.severity] * STATUS_FACTOR[c.status] for c in checks if c.status in ("pass", "warn", "fail"))
     evaluated = sum(1 for c in checks if c.status in ("pass", "warn", "fail"))
     report = PostureReport(checks=checks, evaluated=evaluated)
     cats: dict[str, dict[str, int]] = {}

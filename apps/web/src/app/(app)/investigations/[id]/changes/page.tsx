@@ -42,6 +42,11 @@ export default function ChangesPage() {
     <div className="grid gap-6 xl:grid-cols-3">
       <div className="space-y-6 xl:col-span-2">
         <Card title={ch && !ch.baseline ? `Changes since ${fmtDate(ch.compared_to)}` : "Changes"}>
+          {ch && !ch.baseline && (ch.not_compared?.length ?? 0) > 0 && (
+            <p className="mb-3 rounded border border-warn/30 bg-warn/5 px-3 py-2 text-xs text-warn">
+              Not compared (unavailable in one of the two runs): {ch.not_compared!.join(", ")}. Their findings are excluded so outages do not appear as changes.
+            </p>
+          )}
           {!ch || ch.baseline ? (
             <EmptyState title="Baseline collection">This is the first run. Re-run the collection or enable monitoring to detect what changes.</EmptyState>
           ) : ch.added_count + ch.removed_count === 0 ? (

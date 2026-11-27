@@ -457,7 +457,17 @@ def execute_investigation(investigation_id: str) -> None:
         previous = inv.results
         prev_finished = previous.get("finished_at")
         assessments = compute_assessments(subject, processed.findings)
-        changes = diff_findings(previous.get("snapshot"), processed.findings, prev_finished)
+        answered = sorted(
+            s for s, st in (processed.coverage.get("by_source") or {}).items() if st in ("ok", "no_results")
+        )
+        prev_answered = previous.get("answered_sources")
+        changes = diff_findings(
+            previous.get("snapshot"),
+            processed.findings,
+            prev_finished,
+            previous_answered=set(prev_answered) if prev_answered is not None else None,
+            current_answered=set(answered),
+        )
         finished = utcnow()
         history = list(previous.get("run_history") or [])[-(MAX_RUN_HISTORY - 1) :]
         history.append(
@@ -481,6 +491,7 @@ def execute_investigation(investigation_id: str) -> None:
                 **assessments,
                 "changes": changes,
                 "snapshot": finding_snapshot(processed.findings),
+                "answered_sources": answered,
                 "run_history": history,
                 "finished_at": finished.isoformat(),
             }

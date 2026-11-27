@@ -136,7 +136,7 @@ export function SegmentedBar({ segments, ariaLabel }: { segments: Segment[]; ari
             style={{ width: `${(s.value / total) * 100}%`, background: s.color, opacity: hover && hover !== s.key ? 0.45 : 1 }} />
         ))}
       </div>
-      <figcaption id={id} className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs sm:grid-cols-4">
+      <figcaption id={id} className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
         {segments.map((s) => (
           <span key={s.key} className="flex items-center gap-1.5 text-slate-300"
             onMouseEnter={() => setHover(s.key)} onMouseLeave={() => setHover(null)}>

@@ -223,3 +223,24 @@ def test_stix_bundle_is_valid_and_deterministic():
         sco_id("user-account", {"account_type": "github", "account_login": "octo"})
         == stix2.UserAccount(account_type="github", account_login="octo").id
     )
+
+
+def test_change_detection_ignores_sources_unavailable_in_either_run():
+    crt = dom("subdomain", {"subdomain": "a.example.com"}, claim="domain.subdomain:a.example.com")
+    crt.source_name = "crtsh"
+    dns = dom("dns_record", {"record_type": "A"}, claim="domain.dns.A:example.com=1.2.3.4")
+    dns.source_name = "dns_records"
+    # run 1: crt.sh unavailable; run 2: crt.sh answered -> its findings are not "new"
+    out = diff(
+        snapshot([dns]), [dns, crt], "t0", previous_answered={"dns_records"}, current_answered={"dns_records", "crtsh"}
+    )
+    assert out["added_count"] == 0 and out["not_compared"] == ["crtsh"]
+    # both runs answered -> genuine change is reported
+    out = diff(
+        snapshot([dns]),
+        [dns, crt],
+        "t0",
+        previous_answered={"dns_records", "crtsh"},
+        current_answered={"dns_records", "crtsh"},
+    )
+    assert out["added_count"] == 1 and out["not_compared"] == []

@@ -85,6 +85,7 @@ export interface ChangeSet {
   added_count: number;
   removed_count: number;
   unchanged_count: number;
+  not_compared?: string[];
 }
 
 export interface RunRecord {
