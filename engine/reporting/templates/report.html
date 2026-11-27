@@ -21,14 +21,33 @@
   dl { display:grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; } dt { color: var(--muted); }
   a { color: var(--acc); word-break: break-all; } code { font-size: 12px; }
   .banner { border:1px solid var(--warn); color: var(--warn); padding: 8px 12px; border-radius: 6px; margin: 12px 0; }
+  .tlp { display:inline-block; font: 700 12px/1 ui-monospace, monospace; padding: 5px 9px; border-radius: 4px; background:#000; letter-spacing:.04em; }
+  .tlp-clear { color:#fff; } .tlp-green { color:#33ff00; } .tlp-amber, .tlp-amber\+strict { color:#ffc000; } .tlp-red { color:#ff2b2b; }
+  .sev { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; }
+  .sev-critical, .sev-high, .st-fail { color: var(--bad); } .sev-medium, .st-warn { color: var(--warn); } .sev-low, .st-pass { color: var(--ok); }
+  .grade { font-size: 40px; font-weight: 800; line-height: 1; } .kpis { display:flex; gap:24px; flex-wrap:wrap; }
 </style>
 </head>
 <body><main>
 <header>
+  <div><span class="tlp tlp-{{ r.tlp }}">{{ r.tlp_label }}</span></div>
   <h1>ATLAS OSINT — Intelligence Report</h1>
   <div class="muted">Report {{ r.report_id }} · generated {{ r.generated_at.strftime("%Y-%m-%d %H:%M UTC") }} by {{ r.generated_by }}</div>
   <div class="muted">Open-source intelligence. Connected evidence. Verifiable insights.</div>
 </header>
+
+<h2>Executive summary</h2>
+<div class="kpis">
+  {% if r.posture and r.posture.grade %}<div><div class="muted">Exposure grade</div><div class="grade">{{ r.posture.grade }}</div><div class="muted">{{ r.posture.score }}/100</div></div>{% endif %}
+  <div><div class="muted">Findings</div><div class="grade">{{ r.findings|length }}</div><div class="muted">{{ r.verified|length }} confirmed · {{ r.possible|length }} possible</div></div>
+  <div><div class="muted">Risk highlights</div><div class="grade">{{ r.risk|length }}</div><div class="muted">{{ r.risk|selectattr("severity","in",["critical","high"])|list|length }} critical/high</div></div>
+  {% if r.changes and not r.changes.baseline %}<div><div class="muted">Since last run</div><div class="grade">+{{ r.changes.added_count }}/−{{ r.changes.removed_count }}</div><div class="muted">added / removed</div></div>{% endif %}
+</div>
+{% if r.risk %}
+<table style="margin-top:12px"><thead><tr><th>Severity</th><th>Highlight</th><th>Detail</th><th>Status</th></tr></thead><tbody>
+{% for h in r.risk %}<tr><td><span class="sev sev-{{ h.severity }}">{{ h.severity }}</span></td><td>{{ h.title }}</td><td class="muted">{{ h.detail }}</td><td>{{ "confirmed" if h.confirmed else "requires confirmation" }}</td></tr>{% endfor %}
+</tbody></table>
+{% else %}<p class="muted">No risk highlights were derived from the evidence.</p>{% endif %}
 
 <h2>1. Investigation scope</h2>
 <dl>
@@ -97,6 +116,14 @@
 </tbody></table>
 {% endif %}
 
+{% if r.posture and r.posture.checks %}
+<h2>Exposure scorecard</h2>
+<p class="muted">{{ r.posture.methodology }}</p>
+<table><thead><tr><th>Status</th><th>Check</th><th>Category</th><th>Severity</th><th>Detail / recommendation</th></tr></thead><tbody>
+{% for c in r.posture.checks %}<tr><td class="st-{{ c.status }}"><b>{{ c.status|upper }}</b></td><td>{{ c.title }}</td><td>{{ c.category }}</td><td>{{ c.severity }}</td><td>{{ c.detail }}{% if c.recommendation %}<br><span class="muted">→ {{ c.recommendation }}</span>{% endif %}</td></tr>{% endfor %}
+</tbody></table>
+{% endif %}
+
 <h2>10. Sources consulted</h2>
 <table><thead><tr><th>Source</th><th>Queried</th><th>Status</th><th>Findings</th><th>Notes</th></tr></thead><tbody>
 {% for run in r.coverage.runs %}<tr><td>{{ run.display_name }}</td><td><code>{{ run.identifier }}</code></td><td>{{ run.status }}</td><td>{{ run.findings }}</td><td class="muted">{{ run.message or "" }}</td></tr>{% endfor %}
@@ -112,4 +139,5 @@
 {% for n in r.analyst_notes %}<div class="card"><div class="muted">{{ n.created_at }} · {{ n.author }}{% if n.finding_id %} · finding <code>{{ n.finding_id }}</code>{% endif %}</div>{{ n.body }}</div>{% else %}<p class="muted">None.</p>{% endfor %}
 
 {% if r.analysis %}<p class="muted" style="margin-top:32px">{{ r.analysis.disclaimer }}</p>{% endif %}
+<p style="margin-top:16px"><span class="tlp tlp-{{ r.tlp }}">{{ r.tlp_label }}</span> <span class="muted">Handle according to the FIRST Traffic Light Protocol 2.0.</span></p>
 </main></body></html>

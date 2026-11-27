@@ -212,6 +212,21 @@ def install_source_mocks(mock) -> None:  # type: ignore[no-untyped-def]
 
     j = lambda name, status=200: httpx.Response(status, json=load_fixture(name))  # noqa: E731
     mock.get("https://data.iana.org/rdap/dns.json").mock(return_value=j("iana_rdap_bootstrap.json"))
+    mock.get(url__regex=r"https://internetdb\.shodan\.io/93\.184\.216\.34").mock(return_value=j("internetdb.json"))
+    mock.get(url__regex=r"https://internetdb\.shodan\.io/.*").mock(return_value=httpx.Response(404, json={}))
+    mock.get(url__regex=r"https://api\.certspotter\.com/.*").mock(return_value=j("certspotter.json"))
+    mock.get("https://example.com/.well-known/security.txt").mock(
+        return_value=httpx.Response(
+            200, text=(FIXTURES / "security.txt").read_text(), headers={"content-type": "text/plain"}
+        )
+    )
+    mock.get("https://mta-sts.example.com/.well-known/mta-sts.txt").mock(
+        return_value=httpx.Response(200, text="version: STSv1\nmode: testing\nmx: *.example-mail.test\n")
+    )
+    mock.get(url__regex=r"https://rdap\.org/ip/.*").mock(return_value=httpx.Response(404, json={}))
+    mock.get(url__regex=r"https://mastodon\.social/.*").mock(return_value=httpx.Response(404, json={}))
+    mock.get(url__regex=r"https://public\.api\.bsky\.app/.*").mock(return_value=httpx.Response(400, json={}))
+    mock.get(url__regex=r"https://api\.crossref\.org/.*").mock(return_value=j("crossref_works.json"))
     mock.get(url__regex=r"https://rdap\.example-registry\.test/domain/.*").mock(return_value=j("rdap_domain.json"))
     mock.get(url__regex=r"https://crt\.sh/.*").mock(return_value=j("crtsh.json"))
     mock.get(url__regex=r"https://web\.archive\.org/cdx/.*").mock(return_value=j("wayback_cdx.json"))

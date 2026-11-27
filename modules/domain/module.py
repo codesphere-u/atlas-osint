@@ -24,7 +24,8 @@ class DomainModule(IntelligenceModule):
             "registrar": reg.attributes.get("registrar") if reg else None,
             "created": reg.attributes.get("created") if reg else None,
             "expires": reg.attributes.get("expires") if reg else None,
-            "subdomains": sum(1 for f in findings if f.finding_type == "subdomain"),
+            # distinct names: crt.sh and Cert Spotter independently report (and corroborate) the same subdomains
+            "subdomains": len({f.attributes.get("subdomain") for f in findings if f.finding_type == "subdomain"}),
             "ips": ips,
             "asns": sorted(x for x in {f.attributes.get("asn") for f in findings if f.finding_type == "ip_asn"} if x),
             "security_headers_missing": web.attributes.get("security_headers_missing") if web else None,

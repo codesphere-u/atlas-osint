@@ -125,7 +125,37 @@ def render_pdf(report: ReportData) -> bytes:
     from fpdf import FPDF
 
     inv = report.investigation
-    pdf = FPDF(format="A4")
+    tlp_colors = {
+        "clear": (255, 255, 255),
+        "green": (51, 255, 0),
+        "amber": (255, 192, 0),
+        "amber+strict": (255, 192, 0),
+        "red": (255, 43, 43),
+    }
+    tlp_label = report.tlp_label
+
+    class MarkedPDF(FPDF):
+        """Every page carries the TLP marking in its header and footer (FIRST TLP 2.0 guidance)."""
+
+        def _marking(self, y: float) -> None:
+            self.set_xy(self.l_margin, y)
+            self.set_font("Helvetica", "B", 8)
+            self.set_fill_color(0, 0, 0)
+            self.set_text_color(*tlp_colors.get(report.tlp, (255, 192, 0)))
+            self.cell(self.get_string_width(tlp_label) + 6, 5, tlp_label, fill=True)
+            self.set_text_color(0, 0, 0)
+
+        def header(self) -> None:
+            self._marking(8)
+            self.set_y(16)
+
+        def footer(self) -> None:
+            self._marking(-12)
+            self.set_font("Helvetica", "", 7)
+            self.set_xy(-30, -12)
+            self.cell(20, 5, f"Page {self.page_no()}", align="R")
+
+    pdf = MarkedPDF(format="A4")
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.set_title(_latin1(f"ATLAS OSINT report {report.report_id}"))
     pdf.set_creator("ATLAS OSINT")
@@ -145,6 +175,27 @@ def render_pdf(report: ReportData) -> bytes:
     h("ATLAS OSINT - Intelligence Report", 17)
     p(f"Report {report.report_id} - generated {report.generated_at:%Y-%m-%d %H:%M UTC} by {report.generated_by}")
     p("Open-source intelligence. Connected evidence. Verifiable insights.")
+    h("Executive summary")
+    posture = report.posture or {}
+    if posture.get("grade"):
+        p(
+            f"Exposure grade: {posture['grade']} ({posture.get('score')}/100, "
+            f"{posture.get('evaluated')} checks evaluated)"
+        )
+    p(
+        f"Findings: {len(report.findings)} ({len(report.verified)} confirmed, {len(report.possible)} possible). "
+        f"Risk highlights: {len(report.risk)}."
+    )
+    ch = report.changes or {}
+    if ch and not ch.get("baseline"):
+        p(f"Changes since the previous run: +{ch.get('added_count', 0)} added, -{ch.get('removed_count', 0)} removed.")
+    for hl in report.risk[:12]:
+        p(
+            f"* [{str(hl.get('severity', '')).upper()}] {hl.get('title')} - {hl.get('detail')}"
+            + ("" if hl.get("confirmed") else " (requires confirmation)")
+        )
+    if not report.risk:
+        p("No risk highlights were derived from the evidence.")
     h("1. Investigation scope")
     for label, key in (
         ("Title", "title"),
@@ -182,6 +233,14 @@ def render_pdf(report: ReportData) -> bytes:
         p(f"* {nc.explanation}")
     if not report.correlation.contradictions and not report.correlation.name_collisions:
         p("None detected.")
+    if posture.get("checks"):
+        h("Exposure scorecard")
+        for c in posture["checks"]:
+            p(
+                f"* {str(c['status']).upper():7} {c['title']} [{c['severity']}] - {c['detail']}"
+                + (f" -> {c['recommendation']}" if c.get("recommendation") else ""),
+                8,
+            )
     h("7. Sources consulted")
     for run in report.coverage.get("runs", []):
         p(

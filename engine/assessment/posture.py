@@ -24,6 +24,8 @@ from shared.types import Finding
 Status = Literal["pass", "warn", "fail", "info", "unknown"]
 Severity = Literal["high", "medium", "low"]
 WEIGHTS = {"high": 10, "medium": 5, "low": 2}
+STATUSES = ("pass", "warn", "fail", "info", "unknown")
+STATUS_FACTOR = dict(zip(STATUSES[:3], (1.0, 0.5, 0.0), strict=True))
 METHODOLOGY = (
     "Checks are derived from collected evidence only. Weights: high 10, medium 5, low 2. pass = full weight, "
     "warn = half, fail = 0; info/unknown are excluded. Grade A ≥ 90, B ≥ 80, C ≥ 70, D ≥ 60, F < 60. "
@@ -400,7 +402,7 @@ def assess_posture(findings: list[Finding], now: datetime | None = None) -> Post
 
     possible = sum(WEIGHTS[c.severity] for c in checks if c.status in ("pass", "warn", "fail"))
     earned = sum(
-        WEIGHTS[c.severity] * {"pass": 1.0, "warn": 0.5, "fail": 0.0}[c.status]
+        WEIGHTS[c.severity] * STATUS_FACTOR[c.status]
         for c in checks
         if c.status in ("pass", "warn", "fail")
     )
@@ -408,7 +410,7 @@ def assess_posture(findings: list[Finding], now: datetime | None = None) -> Post
     report = PostureReport(checks=checks, evaluated=evaluated)
     cats: dict[str, dict[str, int]] = {}
     for c in checks:
-        d = cats.setdefault(c.category, {"pass": 0, "warn": 0, "fail": 0, "info": 0, "unknown": 0})
+        d = cats.setdefault(c.category, dict.fromkeys(STATUSES, 0))
         d[c.status] += 1
     report.categories = cats
     if evaluated >= 5 and possible:

@@ -204,6 +204,8 @@ def build_stix_bundle(
         ref: dict[str, Any] = {"source_name": f.source_display_name[:250]}
         if f.source_url.startswith(("http://", "https://")):
             ref["url"] = f.source_url
+        else:  # e.g. "dns:example.com?type=MX" – STIX requires url, external_id or description
+            ref["description"] = f"Collected via {f.source_url}"[:1000]
         if f.evidence.content_hash:
             ref["hashes"] = {"SHA-256": f.evidence.content_hash}
         note["external_references"] = [ref]
