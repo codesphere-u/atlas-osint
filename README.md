@@ -88,29 +88,25 @@ is in [`docs/source-coverage.md`](docs/source-coverage.md). Sources are plugins 
   bulk verification, interactive graph (force/radial layouts, focus mode, search, SVG/PNG export), evidence
   timeline with histogram, exposure, changes, cases, source management and administration.
 
-## Quick start (Docker)
+## Deploy to production
+
+On a Linux server with Docker and a DNS record pointing at it:
 
 ```bash
-git clone https://github.com/codesphere-u/atlas-osint.git
+git clone https://github.com/codesphere-u/atlas-osint.git && cd atlas-osint
 ```
 
 ```bash
-cd atlas-osint && cp .env.example .env
+./deploy/setup.sh --domain atlas.example.org --admin-email you@example.org
 ```
 
 ```bash
-docker compose build api && docker compose run --rm --no-deps api atlas generate-keys
+sudo docker compose up -d --build && sudo ./deploy/check.sh
 ```
 
-Paste the three generated keys into `.env`, set `POSTGRES_PASSWORD`, `REDIS_PASSWORD`,
-`ATLAS_BOOTSTRAP_ADMIN_EMAIL` and `ATLAS_BOOTSTRAP_ADMIN_PASSWORD`, then:
-
-```bash
-docker compose up -d --build
-```
-
-Open <https://localhost>. Set `ATLAS_DOMAIN` to a public hostname for automatic Let's Encrypt certificates. If your
-network filters outbound DNS, set `ATLAS_DNS_RESOLVER=doh`. Full guide: [`docs/deployment.md`](docs/deployment.md).
+`setup.sh` generates every secret and a one-time admin password; Caddy obtains the TLS certificate; `check.sh`
+verifies health, TLS, headers and backups. Scheduled backups, restore, upgrades, IP allow-listing and a production
+checklist are covered in the [deployment guide](docs/deployment.md). For a local trial use `--domain localhost`.
 
 ## Development
 

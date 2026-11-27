@@ -22,6 +22,12 @@ def load_fixture(name: str):  # type: ignore[no-untyped-def]
     return json.loads((FIXTURES / name).read_text())
 
 
+# Tests must not pick up a developer's or server's .env from the working directory.
+from shared.config import Settings  # noqa: E402
+
+Settings.model_config["env_file"] = None
+
+
 @pytest.fixture(autouse=True, scope="session")
 def _test_env(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
     db = tmp_path_factory.mktemp("db") / "atlas-test.db"

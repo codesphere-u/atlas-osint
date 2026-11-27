@@ -6,18 +6,26 @@
 		Strict-Transport-Security "max-age=63072000; includeSubDomains"
 		-Server
 	}
-	@api path /api/* /healthz /readyz
-	handle @api {
-		reverse_proxy api:8000
-	}
-	handle {
-		reverse_proxy web:3000
-	}
 	request_body {
 		max_size 2MB
 	}
 	log {
 		output stdout
 		format json
+	}
+
+	# Optional network allow-list (ATLAS_ALLOWED_IPS, space-separated CIDRs; default: everyone).
+	# The data-subject privacy-request page and its API stay public so people can always exercise their rights.
+	@api path /api/* /healthz /readyz
+
+	route {
+		@blocked {
+			not remote_ip {$ATLAS_ALLOWED_IPS:0.0.0.0/0 ::/0}
+			not path /privacy /privacy/* /api/v1/privacy/requests /_next/static/* /favicon.ico /healthz
+		}
+		respond @blocked "Access to this ATLAS installation is restricted." 403
+
+		reverse_proxy @api api:8000
+		reverse_proxy web:3000
 	}
 }

@@ -13,6 +13,12 @@ dist/
 
 # Local data / secrets
 .env
+.env.*
+!.env.example
+# database backups (deploy/backup-loop.sh, deploy/backup.sh)
+backups/
+*.dump
+*.dump.partial
 *.db
 *.sqlite
 data/

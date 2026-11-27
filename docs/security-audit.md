@@ -59,6 +59,7 @@ No unresolved critical or high findings remain in the reviewed scope.
 
 | Risk | Rationale / mitigation |
 |---|---|
+| No MFA / SSO yet | Optional IP allow-list at Caddy (`ATLAS_ALLOWED_IPS`) or a VPN/identity-aware proxy is recommended in the deployment checklist; lockout and rate limits apply. |
 | Access tokens cannot be revoked before expiry (60 min) | Disabling a user blocks it immediately (active flag checked per request); logout removes the cookie. Token versioning is on the roadmap. |
 | Account lockout can be triggered by an attacker (DoS on a known account) | Standard trade-off; lockout is 15 minutes; rate limits restrict attempts. |
 | `script-src 'unsafe-inline'` in the web CSP | Required by Next.js inline bootstrap without nonces; no third-party origins are allowed. Nonce-based CSP on the roadmap. |

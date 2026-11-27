@@ -5,6 +5,18 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Production deployment tooling in `deploy/`: `setup.sh` (generates `.env` with all secrets and a one-time admin
+  password, refuses to overwrite keys), `check.sh` (post-deployment verification, `--clear-bootstrap-password`),
+  `backup.sh`, `restore.sh` (safety dump first) and `upgrade.sh` (backup, update, verify).
+- Scheduled PostgreSQL backups (`backup` service) with retention.
+- Optional IP allow-list at Caddy (`ATLAS_ALLOWED_IPS`) that keeps the privacy-request page public.
+- `atlas reset-password` command (clears lockout, audited).
+- Deploying from published GHCR release images (`ATLAS_IMAGE_REPO`, `ATLAS_VERSION`).
+- Log rotation and memory limits for every container.
+- CI starts the production stack with `setup.sh` and runs `check.sh` and a sign-in on every push; shellcheck for
+  the deploy scripts.
+
 ### Changed
 - Web dashboard upgraded to **Next.js 16.4** (Turbopack builds) and **ESLint 10** with the native flat configs of
   `eslint-config-next` (no `FlatCompat`). `middleware.ts` is now `proxy.ts`. The PostCSS override is no longer

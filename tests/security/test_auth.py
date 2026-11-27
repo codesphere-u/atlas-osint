@@ -110,3 +110,30 @@ def test_weak_passwords_rejected(client, admin_headers):
         json={"email": "weak@atlas-osint-test.com", "password": "aaaaaaaaaaaa", "role": "viewer"},
     )
     assert r.status_code == 422
+
+
+def test_cli_reset_password_clears_lockout_and_is_audited(client, make_user, admin_headers, monkeypatch, capsys):
+    import io
+
+    from atlas_api.cli import main
+
+    email = "reset@atlas-osint-test.com"
+    make_user(email, "viewer")
+    for _ in range(6):
+        client.post("/api/v1/auth/login", json={"email": email, "password": "wrong"})
+    assert "locked" in client.post("/api/v1/auth/login", json={"email": email, "password": "User-Password-123"}).text
+
+    monkeypatch.setattr("sys.stdin", io.StringIO("short\n"))
+    assert main(["reset-password", email, "--stdin"]) == 1  # strength rules still apply
+    monkeypatch.setattr("sys.stdin", io.StringIO("Recovered-Pass-2026\n"))
+    assert main(["reset-password", "nobody@atlas-osint-test.com", "--stdin"]) == 1
+    monkeypatch.setattr("sys.stdin", io.StringIO("Recovered-Pass-2026\n"))
+    assert main(["reset-password", email, "--stdin"]) == 0
+    assert "lockout cleared" in capsys.readouterr().out
+
+    assert client.post("/api/v1/auth/login", json={"email": email, "password": "User-Password-123"}).status_code == 401
+    assert (
+        client.post("/api/v1/auth/login", json={"email": email, "password": "Recovered-Pass-2026"}).status_code == 200
+    )
+    actions = [e["action"] for e in client.get("/api/v1/admin/audit?limit=200", headers=admin_headers).json()]
+    assert "user.password_reset_cli" in actions

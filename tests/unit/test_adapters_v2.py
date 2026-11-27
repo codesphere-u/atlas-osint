@@ -251,3 +251,17 @@ def test_doh_parsing():
 
     with pytest.raises(DnsLookupError):
         parse_doh_answer({"Status": 2}, "example.com", "A")
+
+
+def test_empty_credentials_mean_not_configured(monkeypatch):
+    """Compose passes unset optional keys as empty strings; they must not count as configured."""
+    from shared.config import Settings
+
+    monkeypatch.setenv("ATLAS_OPENSANCTIONS_API_KEY", "")
+    monkeypatch.setenv("ATLAS_HIBP_API_KEY", "")
+    monkeypatch.setenv("ATLAS_BOOTSTRAP_ADMIN_PASSWORD", "")
+    monkeypatch.setenv("ATLAS_FEDIVERSE_INSTANCES", "")
+    s = Settings()
+    assert s.opensanctions_api_key is None and s.hibp_api_key is None
+    assert s.bootstrap_admin_password is None
+    assert s.fediverse_instances  # falls back to the default list

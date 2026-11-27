@@ -15,7 +15,9 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="ATLAS_", env_file=".env", extra="ignore")
+    # env_ignore_empty: "ATLAS_X=" (as in .env.example, or "${ATLAS_X:-}" in Compose) means "not set", so optional
+    # credentials stay None and their sources report "not configured" instead of calling APIs with an empty key.
+    model_config = SettingsConfigDict(env_prefix="ATLAS_", env_file=".env", env_ignore_empty=True, extra="ignore")
 
     # --- runtime -----------------------------------------------------------
     env: Literal["development", "test", "production"] = "development"

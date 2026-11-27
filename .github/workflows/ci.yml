@@ -119,13 +119,29 @@ jobs:
         run: docker build -f docker/api.Dockerfile -t atlas-osint/api:ci .
       - name: Build web image
         run: docker build -f docker/web.Dockerfile -t atlas-osint/web:ci .
-      - name: Compose configuration is valid
+      - name: Deploy scripts pass shellcheck
         run: |
-          cat > .env <<ENV
-          ATLAS_SECRET_KEY=ci-secret-key-ci-secret-key-ci-secret-key-1
-          ATLAS_ENCRYPTION_KEY=x5Hk3ZbUq0Gv1H1Qd8qUe1c2bH9H8mJm3oT3n0W7k2Q=
-          ATLAS_HASH_KEY=ci-hash-key
-          POSTGRES_PASSWORD=ci-postgres
-          REDIS_PASSWORD=ci-redis
-          ENV
+          shellcheck -x -S warning deploy/*.sh
+          shellcheck -s sh deploy/backup-loop.sh
+      - name: Generate a production .env with deploy/setup.sh
+        run: ./deploy/setup.sh --domain localhost --admin-email ci-admin@example.org
+      - name: Compose and Caddy configuration are valid
+        run: |
           docker compose config -q
+          docker run --rm -e ATLAS_DOMAIN=atlas.example.org -e "ATLAS_ALLOWED_IPS=192.0.2.0/24" \
+            -v "$PWD/docker/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine \
+            caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      - name: Start the production stack and verify it
+        run: |
+          docker tag atlas-osint/api:ci atlas-osint/api:latest
+          docker tag atlas-osint/web:ci atlas-osint/web:latest
+          docker compose up -d --no-build
+          ./deploy/check.sh
+          email=$(grep '^ATLAS_BOOTSTRAP_ADMIN_EMAIL=' .env | cut -d= -f2-)
+          password=$(grep '^ATLAS_BOOTSTRAP_ADMIN_PASSWORD=' .env | cut -d= -f2-)
+          code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/api/v1/auth/login \
+            -H 'Content-Type: application/json' -d "{\"email\":\"$email\",\"password\":\"$password\"}")
+          test "$code" = 200 || { echo "login returned $code"; exit 1; }
+      - name: Container logs on failure
+        if: failure()
+        run: docker compose logs --tail=80

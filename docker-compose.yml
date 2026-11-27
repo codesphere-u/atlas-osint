@@ -1,8 +1,15 @@
-# ATLAS OSINT – production-style local deployment.
-#   cp .env.example .env && docker compose run --rm api atlas generate-keys >> .env   (then edit .env)
-#   docker compose up -d --build
+# ATLAS OSINT – production deployment (single host).
+#   ./deploy/setup.sh            # writes .env with generated secrets (see docs/deployment.md)
+#   docker compose up -d --build # or, with published images: docker compose pull && docker compose up -d --no-build
+#   ./deploy/check.sh            # post-deployment verification
 # Only Caddy publishes ports; all other services live on an internal network.
 name: atlas-osint
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
 
 x-app-env: &app-env
   ATLAS_ENV: ${ATLAS_ENV:-production}
@@ -33,6 +40,8 @@ x-app-env: &app-env
   ATLAS_FEDIVERSE_INSTANCES: ${ATLAS_FEDIVERSE_INSTANCES:-mastodon.social}
   ATLAS_DEFAULT_RETENTION_DAYS: ${ATLAS_DEFAULT_RETENTION_DAYS:-90}
   ATLAS_LOG_LEVEL: ${ATLAS_LOG_LEVEL:-INFO}
+  ATLAS_MAX_RETENTION_DAYS: ${ATLAS_MAX_RETENTION_DAYS:-365}
+  ATLAS_REQUIRE_CONSENT_FOR_INDIVIDUALS: ${ATLAS_REQUIRE_CONSENT_FOR_INDIVIDUALS:-true}
 
 services:
   postgres:
@@ -49,6 +58,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U atlas -d atlas"]
       interval: 5s
       retries: 20
+    mem_limit: ${ATLAS_MEM_POSTGRES:-1g}
+    logging: *logging
     networks: [internal]
 
   redis:
@@ -61,11 +72,14 @@ services:
       retries: 20
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
+    mem_limit: ${ATLAS_MEM_REDIS:-256m}
+    logging: *logging
     networks: [internal]
 
   api:
     build: { context: ., dockerfile: docker/api.Dockerfile }
-    image: atlas-osint/api:${ATLAS_VERSION:-latest}
+    # ATLAS_IMAGE_REPO=ghcr.io/codesphere-u/atlas-osint and ATLAS_VERSION=v0.2.0 use the published release images
+    image: ${ATLAS_IMAGE_REPO:-atlas-osint}/api:${ATLAS_VERSION:-latest}
     restart: unless-stopped
     environment: *app-env
     depends_on:
@@ -75,10 +89,12 @@ services:
     tmpfs: [/tmp]
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
+    mem_limit: ${ATLAS_MEM_API:-1g}
+    logging: *logging
     networks: [internal, egress]
 
   worker:
-    image: atlas-osint/api:${ATLAS_VERSION:-latest}
+    image: ${ATLAS_IMAGE_REPO:-atlas-osint}/api:${ATLAS_VERSION:-latest}
     restart: unless-stopped
     command: ["celery", "-A", "workers.celery_app", "worker", "-B", "--loglevel=INFO", "--concurrency=4",
               "--schedule=/tmp/celerybeat-schedule"]
@@ -95,11 +111,13 @@ services:
       test: ["CMD-SHELL", "celery -A workers.celery_app inspect ping -d celery@$$HOSTNAME --timeout 5 | grep -q pong"]
       interval: 30s
       retries: 3
+    mem_limit: ${ATLAS_MEM_WORKER:-1536m}
+    logging: *logging
     networks: [internal, egress]
 
   web:
     build: { context: ., dockerfile: docker/web.Dockerfile }
-    image: atlas-osint/web:${ATLAS_VERSION:-latest}
+    image: ${ATLAS_IMAGE_REPO:-atlas-osint}/web:${ATLAS_VERSION:-latest}
     restart: unless-stopped
     environment:
       ATLAS_API_URL: http://api:8000
@@ -109,6 +127,8 @@ services:
     tmpfs: [/tmp]
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
+    mem_limit: ${ATLAS_MEM_WEB:-512m}
+    logging: *logging
     networks: [internal]
 
   caddy:
@@ -116,6 +136,9 @@ services:
     restart: unless-stopped
     environment:
       ATLAS_DOMAIN: ${ATLAS_DOMAIN:-localhost}
+      # Optional: space-separated CIDRs allowed to reach the application (default: everyone).
+      # The public privacy-request page stays reachable for data subjects.
+      ATLAS_ALLOWED_IPS: ${ATLAS_ALLOWED_IPS:-0.0.0.0/0 ::/0}
     ports:
       - "${ATLAS_HTTP_PORT:-80}:80"
       - "${ATLAS_HTTPS_PORT:-443}:443"
@@ -124,7 +147,32 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on: [web, api]
+    mem_limit: ${ATLAS_MEM_CADDY:-256m}
+    logging: *logging
     networks: [internal, egress]
+
+  # Scheduled logical backups (pg_dump custom format) into ./backups on the host.
+  # Dumps hold mostly ciphertext; they are only readable together with ATLAS_ENCRYPTION_KEY and ATLAS_HASH_KEY,
+  # so keep .env (or those keys) in a password manager, separately from the backup copies.
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres
+      PGUSER: atlas
+      PGDATABASE: atlas
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      INTERVAL_HOURS: ${ATLAS_BACKUP_INTERVAL_HOURS:-24}
+      KEEP_DAYS: ${ATLAS_BACKUP_KEEP_DAYS:-14}
+    entrypoint: ["/bin/sh", "/backup.sh"]
+    volumes:
+      - ./deploy/backup-loop.sh:/backup.sh:ro
+      - ${ATLAS_BACKUP_DIR:-./backups}:/backups
+    depends_on:
+      api: { condition: service_healthy }  # first dump after migrations have run
+    mem_limit: 256m
+    logging: *logging
+    networks: [internal]
 
 networks:
   internal:

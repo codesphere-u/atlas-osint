@@ -17,6 +17,9 @@ def main(argv: list[str] | None = None) -> int:
     cu = sub.add_parser("create-user", help="create a user")
     cu.add_argument("email")
     cu.add_argument("--role", default="analyst", choices=["admin", "analyst", "viewer", "auditor"])
+    rp = sub.add_parser("reset-password", help="set a new password for a user and clear any lockout")
+    rp.add_argument("email")
+    rp.add_argument("--stdin", action="store_true", help="read the new password from standard input")
     sub.add_parser("retention", help="purge investigations past their retention date")
     sub.add_parser("generate-keys", help="print fresh secret/encryption/hash keys for .env")
     sub.add_parser("sources", help="list registered source adapters as JSON")
@@ -56,6 +59,37 @@ def main(argv: list[str] | None = None) -> int:
             db.add(User(email=args.email.lower(), password_hash=hash_password(password), role=args.role))
             db.commit()
         print(f"created {args.role} {args.email}")
+        return 0
+    if args.cmd == "reset-password":
+        from sqlalchemy import select
+
+        from atlas_api.audit import audit
+        from atlas_api.models import User
+        from atlas_api.security import hash_password, validate_password_strength
+
+        if args.stdin:
+            password = sys.stdin.readline().rstrip("\n")
+        else:
+            password = getpass.getpass("New password: ")
+            if getpass.getpass("Repeat: ") != password:
+                print("error: passwords do not match", file=sys.stderr)
+                return 1
+        try:
+            validate_password_strength(password)
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        with get_sessionmaker()() as db:
+            user = db.scalar(select(User).where(User.email == args.email.lower()))
+            if user is None:
+                print(f"error: no user {args.email}", file=sys.stderr)
+                return 1
+            user.password_hash = hash_password(password)
+            user.failed_logins = 0
+            user.locked_until = None
+            audit(db, actor_id=None, action="user.password_reset_cli", target_type="user", target_id=user.id)
+            db.commit()
+        print(f"password updated for {args.email}; lockout cleared")
         return 0
     if args.cmd == "retention":
         from atlas_api.services.investigations import purge_expired
