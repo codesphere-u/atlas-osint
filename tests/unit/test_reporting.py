@@ -95,6 +95,24 @@ def test_html_report_escapes_content_and_has_sections():
     assert "Content-Security-Policy" in html
 
 
-def test_pdf_report_renders():
+def test_pdf_report_renders_with_text_at_the_left_margin():
+    import io
+
+    from pypdf import PdfReader
+
     pdf = render_pdf(sample_report())
     assert pdf[:5] == b"%PDF-" and len(pdf) > 1500
+    page = PdfReader(io.BytesIO(pdf)).pages[0]
+    width = float(page.mediabox.width)
+    xs: list[float] = []
+
+    def visit(text, cm, tm, font, size):  # pypdf text visitor: tm[4] is the x position in points
+        if text.strip() and not text.strip().startswith("Page "):  # the page number is right-aligned by design
+            xs.append(tm[4])
+
+    page.extract_text(visitor_text=visit)
+    assert xs, "no text extracted"
+    # Regression: fpdf2's multi_cell defaults to new_x=RIGHT, which pushed every paragraph to the right edge.
+    assert max(xs) < width / 2, f"text starts too far right: {max(xs):.0f}pt of {width:.0f}pt"
+    text = page.extract_text()
+    assert "Executive summary" in text and "Investigation scope" in text and "TLP:AMBER" in text

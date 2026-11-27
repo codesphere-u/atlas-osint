@@ -124,8 +124,10 @@ export default function FindingsPage() {
   }, [order, active, canVerify]);
 
   useEffect(() => {
-    listRef.current?.querySelector(`[data-fid="${active?.id}"]`)?.scrollIntoView({ block: "nearest" });
-  }, [active?.id]);
+    // Only follow the selection once the user has moved it; never scroll the page on first render.
+    if (!activeId) return;
+    listRef.current?.querySelector(`[data-fid="${activeId}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [activeId]);
 
   if (!done) return inv.status === "failed" ? null : <SkeletonRows rows={6} />;
   const cov = inv.coverage;

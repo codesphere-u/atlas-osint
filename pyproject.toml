@@ -61,6 +61,7 @@ dev = [
   "pip-audit>=2.7",
   "anthropic>=2.0",
   "stix2>=3.0",
+  "pypdf>=5",
 ]
 
 [project.scripts]

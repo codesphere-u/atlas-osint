@@ -165,12 +165,12 @@ def render_pdf(report: ReportData) -> bytes:
     def h(text: str, size: int = 13) -> None:
         pdf.ln(2)
         pdf.set_font("Helvetica", "B", size)
-        pdf.multi_cell(width, 7, _latin1(text))
+        pdf.multi_cell(width, 7, _latin1(text), new_x="LMARGIN", new_y="NEXT")
         pdf.set_font("Helvetica", "", 9)
 
     def p(text: str, size: int = 9) -> None:
         pdf.set_font("Helvetica", "", size)
-        pdf.multi_cell(width, 4.8, _latin1(text))
+        pdf.multi_cell(width, 4.8, _latin1(text), new_x="LMARGIN", new_y="NEXT")
 
     h("ATLAS OSINT - Intelligence Report", 17)
     p(f"Report {report.report_id} - generated {report.generated_at:%Y-%m-%d %H:%M UTC} by {report.generated_by}")
