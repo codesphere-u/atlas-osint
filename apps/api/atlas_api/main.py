@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -16,7 +17,7 @@ from sqlalchemy import select
 from atlas_api import __version__
 from atlas_api.db import get_sessionmaker
 from atlas_api.models import User
-from atlas_api.routers import admin, auth, investigations, meta, privacy, sources
+from atlas_api.routers import admin, auth, cases, investigations, meta, privacy, sources
 from atlas_api.security import hash_password, validate_password_strength
 from shared.config import get_settings
 from shared.logging import configure_logging
@@ -63,12 +64,39 @@ async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
     if s.auto_migrate:
         run_migrations()
     bootstrap_admin()
+    stop = threading.Event()
+    scheduler: threading.Thread | None = None
     if s.task_backend == "inline":
         from atlas_api.services.investigations import purge_expired
 
         with get_sessionmaker()() as db:
             purge_expired(db)
+        if s.inline_scheduler:
+            scheduler = threading.Thread(
+                target=_inline_scheduler, args=(stop, s.scheduler_interval_seconds), name="atlas-scheduler", daemon=True
+            )
+            scheduler.start()
     yield
+    stop.set()
+    if scheduler is not None:
+        scheduler.join(timeout=5)
+
+
+def _inline_scheduler(stop: threading.Event, interval: int) -> None:
+    """Single-node scheduler: runs due monitoring jobs and the hourly retention purge (Celery beat does this
+    when ATLAS_TASK_BACKEND=celery)."""
+    from atlas_api.services.investigations import purge_expired, run_due_monitors
+
+    last_purge = time.monotonic()
+    while not stop.wait(interval):
+        try:
+            with get_sessionmaker()() as db:
+                run_due_monitors(db)
+                if time.monotonic() - last_purge > 3600:
+                    purge_expired(db)
+                    last_purge = time.monotonic()
+        except Exception:
+            log.exception("inline scheduler iteration failed")
 
 
 def _redis_client() -> Any | None:
@@ -159,7 +187,15 @@ def create_app() -> FastAPI:
         allow_headers=["Authorization", "Content-Type", "X-Atlas-CSRF", "X-Request-ID"],
         expose_headers=["X-Total-Count", "X-Request-ID"],
     )
-    for r in (meta.router, auth.router, investigations.router, sources.router, privacy.router, admin.router):
+    for r in (
+        meta.router,
+        auth.router,
+        investigations.router,
+        cases.router,
+        sources.router,
+        privacy.router,
+        admin.router,
+    ):
         app.include_router(r)
     return app
 

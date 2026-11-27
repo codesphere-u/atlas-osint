@@ -14,10 +14,14 @@ from sqlalchemy.orm import Session
 
 from atlas_api.audit import audit
 from atlas_api.db import get_sessionmaker
-from atlas_api.models import AnalystNote, FindingRow, Investigation, SourceConfig, Suppression, User
-from atlas_api.schemas import InvestigationCreate, LegalBasis
+from atlas_api.models import AnalystNote, Case, FindingRow, Investigation, SourceConfig, Suppression, User
+from atlas_api.schemas import InvestigationCreate, InvestigationOptions, LegalBasis, PivotRequest
 from atlas_api.security import role_at_least
 from engine.analysis.analyst import AnalysisReport, deterministic_analysis, run_analysis
+from engine.assessment.posture import assess_posture
+from engine.assessment.risk import risk_highlights
+from engine.changes import diff as diff_findings
+from engine.changes import snapshot as finding_snapshot
 from engine.collectors.orchestrator import collect
 from engine.correlation.resolver import identifier_key
 from engine.normalization.identifiers import InvalidIdentifier, normalize, normalize_domain
@@ -81,7 +85,9 @@ def validate_authorization(payload: InvestigationCreate, subject_kind: SubjectKi
     return problems
 
 
-def create_investigation(db: Session, payload: InvestigationCreate, user: User, ip: str | None) -> Investigation:
+def create_investigation(
+    db: Session, payload: InvestigationCreate, user: User, ip: str | None, *, parent: Investigation | None = None
+) -> Investigation:
     settings = get_settings()
     try:
         subject = normalize(payload.subject_type, payload.subject, default_region=payload.default_region)
@@ -153,6 +159,9 @@ def create_investigation(db: Session, payload: InvestigationCreate, user: User, 
         created_by=user.id,
         retention_until=utcnow() + timedelta(days=retention),
         progress={},
+        tlp=payload.tlp,
+        case_id=_checked_case_id(db, payload.case_id, user),
+        parent_id=parent.id if parent else None,
     )
     inv.set_subject(subject.value)
     db.add(inv)
@@ -173,6 +182,127 @@ def create_investigation(db: Session, payload: InvestigationCreate, user: User, 
         },
     )
     return inv
+
+
+def _checked_case_id(db: Session, case_id: str | None, user: User) -> str | None:
+    if not case_id:
+        return None
+    case = db.get(Case, case_id)
+    if case is None or (case.created_by != user.id and user.role != "admin"):
+        raise HTTPException(status_code=404, detail="case not found")
+    return case.id
+
+
+def pivot_investigation(
+    db: Session, parent: Investigation, body: PivotRequest, user: User, ip: str | None
+) -> Investigation:
+    """Create a child investigation for an identifier discovered in ``parent``, inheriting its authorisation."""
+    if not body.covered_by_authorization:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "authorization": [
+                    "Confirm that the pivot target is the same subject or is covered by the existing authorisation."
+                ]
+            },
+        )
+    if parent.case_id is None:
+        case = Case(title=parent.title[:200], created_by=parent.created_by, tlp=parent.tlp)
+        db.add(case)
+        db.flush()
+        parent.case_id = case.id
+        db.commit()
+    remaining = max(1, (_aware(parent.retention_until) - utcnow()).days)
+    payload = InvestigationCreate(
+        title=(body.title or f"{parent.title} → {body.subject_type.value}: {body.subject}")[:200],
+        subject_type=body.subject_type,
+        subject=body.subject,
+        subject_kind=body.subject_kind,
+        purpose=f"Pivot from investigation {parent.id[:8]} ({parent.title}): {parent.purpose}"[:2000],
+        legal_basis=LegalBasis(parent.legal_basis),
+        authorization_reference=parent.authorization_reference,
+        consent_obtained=parent.consent_obtained,
+        consent_reference=body.consent_reference or parent.consent_reference,
+        authorized_domains=list(parent.authorized_domains or []),
+        attestation=True,
+        retention_days=remaining,
+        options=InvestigationOptions(
+            **{k: v for k, v in (parent.options or {}).items() if k in InvestigationOptions.model_fields}
+        ),
+        tlp=parent.tlp,  # type: ignore[arg-type]
+        case_id=parent.case_id,
+        run=body.run,
+    )
+    child = create_investigation(db, payload, user, ip, parent=parent)
+    audit(
+        db,
+        actor_id=user.id,
+        action="investigation.pivot",
+        target_type="investigation",
+        target_id=child.id,
+        ip=ip,
+        details={"parent_id": parent.id, "subject_type": body.subject_type.value},
+    )
+    return child
+
+
+MONITORABLE_KINDS = {SubjectKind.ORGANIZATION.value, SubjectKind.INFRASTRUCTURE.value}
+
+
+def set_monitoring(
+    db: Session, inv: Investigation, interval_hours: int | None, actor_id: str, ip: str | None
+) -> Investigation:
+    """Scheduled re-collection. Not available for individuals: continuous monitoring of a person is surveillance."""
+    if interval_hours is not None and inv.subject_kind not in MONITORABLE_KINDS:
+        raise HTTPException(
+            status_code=422,
+            detail="Monitoring is only available for organisations and "
+            "infrastructure. Continuous monitoring of individuals is not "
+            "supported.",
+        )
+    inv.monitor_interval_hours = interval_hours
+    inv.next_run_at = utcnow() + timedelta(hours=interval_hours) if interval_hours else None
+    db.commit()
+    audit(
+        db,
+        actor_id=actor_id,
+        action="investigation.monitoring",
+        target_type="investigation",
+        target_id=inv.id,
+        ip=ip,
+        details={"interval_hours": interval_hours},
+    )
+    return inv
+
+
+def run_due_monitors(db: Session, dispatch: Callable[[str], None] | None = None) -> list[str]:
+    """Queue monitored investigations whose next run is due (called by Celery beat or the inline scheduler)."""
+    now = utcnow()
+    due = db.scalars(
+        select(Investigation).where(
+            Investigation.monitor_interval_hours.is_not(None),
+            Investigation.next_run_at.is_not(None),
+            Investigation.next_run_at <= now,
+            Investigation.status.in_(("completed", "failed")),
+            Investigation.retention_until > now,
+        )
+    ).all()
+    ids = []
+    for inv in due:
+        inv.status = "queued"
+        inv.options = {**(inv.options or {}), "_trigger": "monitor"}
+        inv.next_run_at = now + timedelta(hours=inv.monitor_interval_hours or 24)
+        ids.append(inv.id)
+    db.commit()
+    for inv_id in ids:
+        (dispatch or execute_investigation)(inv_id)
+    return ids
+
+
+def _aware(dt):  # type: ignore[no-untyped-def]
+    from datetime import UTC
+
+    return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
 
 
 def enabled_sources_for(
@@ -220,6 +350,27 @@ def _store_findings(db: Session, inv: Investigation, findings: list[Finding]) ->
         db.add(row)
     inv.finding_count = len(findings)
     inv.confirmed_count = sum(1 for f in findings if classify(f) == "confirmed")
+
+
+POSTURE_TYPES = {IdentifierType.DOMAIN, IdentifierType.URL, IdentifierType.IP}
+MAX_RUN_HISTORY = 30
+
+
+def compute_assessments(subject: Identifier, findings: list[Finding]) -> dict[str, Any]:
+    """Exposure scorecard (infrastructure subjects) and risk highlights."""
+    posture = assess_posture(findings) if subject.type in POSTURE_TYPES else None
+    highlights = risk_highlights(findings, posture)
+    return {
+        "posture": posture.model_dump(mode="json") if posture and posture.checks else None,
+        "risk": [h.model_dump(mode="json") for h in highlights],
+    }
+
+
+def _risk_level(risk: list[dict[str, Any]]) -> str:
+    for level in ("critical", "high", "medium", "low"):
+        if any(h["severity"] == level for h in risk):
+            return level
+    return "none"
 
 
 def execute_investigation(investigation_id: str) -> None:
@@ -303,6 +454,23 @@ def execute_investigation(investigation_id: str) -> None:
             )
         )
         analysis.validation_notes = notes + analysis.validation_notes
+        previous = inv.results
+        prev_finished = previous.get("finished_at")
+        assessments = compute_assessments(subject, processed.findings)
+        changes = diff_findings(previous.get("snapshot"), processed.findings, prev_finished)
+        finished = utcnow()
+        history = list(previous.get("run_history") or [])[-(MAX_RUN_HISTORY - 1) :]
+        history.append(
+            {
+                "at": finished.isoformat(),
+                "findings": len(processed.findings),
+                "confirmed": sum(1 for f in processed.findings if classify(f) == "confirmed"),
+                "added": changes["added_count"],
+                "removed": changes["removed_count"],
+                "grade": (assessments["posture"] or {}).get("grade"),
+                "trigger": "monitor" if inv.options.get("_trigger") == "monitor" else "manual",
+            }
+        )
         _store_findings(db, inv, processed.findings)
         inv.set_results(
             {
@@ -310,9 +478,20 @@ def execute_investigation(investigation_id: str) -> None:
                 "coverage": processed.coverage,
                 "module_summary": processed.module_summary,
                 "analysis": analysis.model_dump(mode="json"),
+                **assessments,
+                "changes": changes,
+                "snapshot": finding_snapshot(processed.findings),
+                "run_history": history,
+                "finished_at": finished.isoformat(),
             }
         )
-        inv.status, inv.finished_at = "completed", utcnow()
+        inv.risk_level = _risk_level(assessments["risk"])
+        inv.posture_grade = (assessments["posture"] or {}).get("grade")
+        inv.run_count = (inv.run_count or 0) + 1
+        inv.options = {k: v for k, v in (inv.options or {}).items() if k != "_trigger"}
+        if inv.monitor_interval_hours:
+            inv.next_run_at = finished + timedelta(hours=inv.monitor_interval_hours)
+        inv.status, inv.finished_at = "completed", finished
         db.commit()
         audit(
             db,
@@ -348,14 +527,18 @@ def recompute(db: Session, inv: Investigation) -> None:
     if prev.get("ai_generated"):
         analysis.validation_notes.append("AI narrative removed after analyst changes; regenerate analysis to refresh.")
     _store_findings(db, inv, findings)
+    assessments = compute_assessments(subject, findings)
     results.update(
         {
             "correlation": correlation.model_dump(mode="json"),
             "coverage": coverage,
             "analysis": analysis.model_dump(mode="json"),
+            **assessments,
         }
     )
     inv.set_results(results)
+    inv.risk_level = _risk_level(assessments["risk"])
+    inv.posture_grade = (assessments["posture"] or {}).get("grade")
     db.commit()
 
 

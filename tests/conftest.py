@@ -41,6 +41,7 @@ def _test_env(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
             "ATLAS_BOOTSTRAP_ADMIN_EMAIL": "admin@atlas-osint-test.com",
             "ATLAS_BOOTSTRAP_ADMIN_PASSWORD": "Admin-Password-123",
             "ATLAS_AI_PROVIDER": "none",
+            "ATLAS_INLINE_SCHEDULER": "false",
         }
     )
     from shared.config import reset_settings_cache

@@ -60,6 +60,7 @@ dev = [
   "bandit>=1.7",
   "pip-audit>=2.7",
   "anthropic>=2.0",
+  "stix2>=3.0",
 ]
 
 [project.scripts]

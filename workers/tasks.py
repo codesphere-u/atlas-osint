@@ -18,3 +18,12 @@ def retention_purge() -> int:
 
     with get_sessionmaker()() as db:
         return purge_expired(db)
+
+
+@app.task(name="atlas.run_due_monitors")
+def run_due_monitors() -> list[str]:
+    from atlas_api.db import get_sessionmaker
+    from atlas_api.services.investigations import run_due_monitors as due
+
+    with get_sessionmaker()() as db:
+        return due(db, dispatch=lambda inv_id: run_investigation.delay(inv_id))

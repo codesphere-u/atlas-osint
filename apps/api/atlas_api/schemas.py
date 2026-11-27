@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -74,6 +74,9 @@ class ApiKeyOut(BaseModel):
     key: str | None = None  # only returned once at creation
 
 
+TLP = Literal["clear", "green", "amber", "amber+strict", "red"]
+
+
 class InvestigationOptions(Strict):
     include_variants: bool = False
     pivot_domain: bool = True
@@ -96,6 +99,8 @@ class InvestigationCreate(Strict):
     retention_days: int | None = Field(default=None, ge=1, le=3650)
     default_region: str | None = Field(default=None, pattern="^[A-Z]{2}$")
     options: InvestigationOptions = Field(default_factory=InvestigationOptions)
+    tlp: TLP = "amber"
+    case_id: str | None = Field(default=None, max_length=32)
     run: bool = True
 
     @field_validator("title", "purpose")
@@ -129,6 +134,14 @@ class InvestigationOut(BaseModel):
     progress: dict[str, Any]
     finding_count: int
     confirmed_count: int
+    tlp: str = "amber"
+    case_id: str | None = None
+    parent_id: str | None = None
+    monitor_interval_hours: int | None = None
+    next_run_at: datetime | None = None
+    run_count: int = 0
+    risk_level: str | None = None
+    posture_grade: str | None = None
 
 
 class InvestigationDetail(InvestigationOut):
@@ -165,6 +178,54 @@ class PrivacyRequestCreate(Strict):
 class PrivacyRequestResolve(Strict):
     status: str = Field(pattern="^(approved|rejected|completed)$")
     note: str | None = Field(default=None, max_length=4000)
+
+
+class InvestigationUpdate(Strict):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    tlp: TLP | None = None
+    case_id: str | None = Field(default=None, max_length=32)
+    remove_from_case: bool = False
+
+
+class PivotRequest(Strict):
+    subject_type: IdentifierType
+    subject: str = Field(min_length=1, max_length=512)
+    subject_kind: SubjectKind | None = None
+    title: str | None = Field(default=None, max_length=200)
+    consent_reference: str | None = Field(default=None, max_length=200)
+    # The analyst confirms the pivot target is the same subject, or is otherwise covered by the authorisation.
+    covered_by_authorization: bool = False
+    run: bool = True
+
+
+class MonitoringUpdate(Strict):
+    interval_hours: int | None = Field(default=None, description="null disables monitoring")
+
+    @field_validator("interval_hours")
+    @classmethod
+    def _allowed(cls, v: int | None) -> int | None:
+        if v is not None and v not in (6, 24, 72, 168, 720):
+            raise ValueError("interval must be one of 6, 24, 72, 168 or 720 hours")
+        return v
+
+
+class BulkVerify(Strict):
+    finding_ids: list[str] = Field(min_length=1, max_length=500)
+    status: str = Field(pattern="^(verified|rejected|unverified)$")
+    note: str | None = Field(default=None, max_length=4000)
+
+
+class CaseCreate(Strict):
+    title: str = Field(min_length=1, max_length=200)
+    description: str | None = Field(default=None, max_length=8000)
+    tlp: TLP = "amber"
+
+
+class CaseUpdate(Strict):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    description: str | None = Field(default=None, max_length=8000)
+    status: str | None = Field(default=None, pattern="^(open|closed)$")
+    tlp: TLP | None = None
 
 
 TokenResponse.model_rebuild()

@@ -22,5 +22,6 @@ app.conf.update(
     result_expires=3600,
     beat_schedule={
         "retention-purge": {"task": "atlas.retention_purge", "schedule": crontab(minute=17, hour="*/6")},
+        "monitoring": {"task": "atlas.run_due_monitors", "schedule": crontab(minute="*/10")},
     },
 )

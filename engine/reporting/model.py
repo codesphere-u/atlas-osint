@@ -47,6 +47,14 @@ class ReportData(BaseModel):
     analyst_notes: list[dict[str, Any]] = Field(default_factory=list)
     methodology: list[str] = Field(default_factory=lambda: list(METHODOLOGY))
     limitations: list[str] = Field(default_factory=list)
+    tlp: str = "amber"
+    posture: dict[str, Any] | None = None
+    risk: list[dict[str, Any]] = Field(default_factory=list)
+    changes: dict[str, Any] | None = None
+
+    @property
+    def tlp_label(self) -> str:
+        return f"TLP:{self.tlp.upper()}"
 
     def bucket(self, name: str) -> list[Finding]:
         return [f for f in self.findings if classify(f) == name]

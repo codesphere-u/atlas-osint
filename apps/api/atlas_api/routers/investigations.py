@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response
@@ -9,13 +10,17 @@ from sqlalchemy.orm import Session
 from atlas_api.audit import audit
 from atlas_api.db import get_db
 from atlas_api.deps import Principal, client_ip, require
-from atlas_api.models import AnalystNote, FindingRow, Investigation, User
+from atlas_api.models import AnalystNote, Case, FindingRow, Investigation, User
 from atlas_api.schemas import (
+    BulkVerify,
     FindingVerify,
     InvestigationCreate,
     InvestigationDetail,
     InvestigationOut,
+    InvestigationUpdate,
+    MonitoringUpdate,
     NoteCreate,
+    PivotRequest,
 )
 from atlas_api.security import Permission
 from atlas_api.services import investigations as svc
@@ -25,8 +30,9 @@ from engine.correlation.resolver import identifier_key
 from engine.normalization.identifiers import try_normalize
 from engine.reporting.model import ReportData, build_limitations
 from engine.reporting.renderers import RENDERERS
+from engine.reporting.stix import build_stix_bundle, render_stix
 from shared.crypto import encrypt_str, keyed_hash
-from shared.types import CorrelationResult, Finding, IdentifierType, VerificationStatus, new_id
+from shared.types import CorrelationResult, Finding, IdentifierType, VerificationStatus, new_id, utcnow
 
 router = APIRouter(prefix="/api/v1/investigations", tags=["investigations"])
 
@@ -55,6 +61,14 @@ def to_out(inv: Investigation) -> InvestigationOut:
         progress=inv.progress or {},
         finding_count=inv.finding_count,
         confirmed_count=inv.confirmed_count,
+        tlp=inv.tlp or "amber",
+        case_id=inv.case_id,
+        parent_id=inv.parent_id,
+        monitor_interval_hours=inv.monitor_interval_hours,
+        next_run_at=inv.next_run_at,
+        run_count=inv.run_count or 0,
+        risk_level=inv.risk_level,
+        posture_grade=inv.posture_grade,
     )
 
 
@@ -150,7 +164,49 @@ def stats(
         else {}
     )
     recent = sorted(invs, key=lambda i: i.created_at, reverse=True)[:8]
+    today = utcnow().date()
+    by_day = {(today - timedelta(days=d)).isoformat(): 0 for d in range(29, -1, -1)}
+    for i in invs:
+        day = i.created_at.date().isoformat()
+        if day in by_day:
+            by_day[day] += 1
+    risk_levels: dict[str, int] = {}
+    grades: dict[str, int] = {}
+    for i in invs:
+        if i.risk_level:
+            risk_levels[i.risk_level] = risk_levels.get(i.risk_level, 0) + 1
+        if i.posture_grade:
+            grades[i.posture_grade] = grades.get(i.posture_grade, 0) + 1
+    recent_changes = []
+    attention = []
+    completed = sorted(
+        (i for i in invs if i.status == "completed" and i.finished_at), key=lambda i: i.finished_at, reverse=True
+    )[:25]
+    for i in completed:
+        res = i.results
+        ch = res.get("changes") or {}
+        if ch and not ch.get("baseline") and (ch.get("added_count") or ch.get("removed_count")):
+            recent_changes.append(
+                {
+                    "investigation_id": i.id,
+                    "title": i.title,
+                    "at": res.get("finished_at"),
+                    "added": ch.get("added_count", 0),
+                    "removed": ch.get("removed_count", 0),
+                    "sample": [a["title"] for a in (ch.get("added") or [])[:3]],
+                }
+            )
+        for h in (res.get("risk") or [])[:3]:
+            if h.get("severity") in ("critical", "high"):
+                attention.append({"investigation_id": i.id, "investigation": i.title, **h})
     return {
+        "by_day": by_day,
+        "monitored": sum(1 for i in invs if i.monitor_interval_hours),
+        "risk_levels": risk_levels,
+        "posture_grades": grades,
+        "recent_changes": recent_changes[:8],
+        "attention": attention[:10],
+        "cases": len({i.case_id for i in invs if i.case_id}),
         "investigations": len(invs),
         "by_status": by_status,
         "by_subject_type": by_type,
@@ -422,7 +478,7 @@ def add_note(
 def report(
     inv_id: str,
     request: Request,
-    format: str = Query(default="html", pattern="^(json|csv|html|pdf)$"),
+    format: str = Query(default="html", pattern="^(json|csv|html|pdf|stix)$"),
     principal: Principal = Depends(require(Permission.REPORT_EXPORT)),
     db: Session = Depends(get_db),
 ) -> Response:
@@ -449,9 +505,21 @@ def report(
         analysis=AnalysisReport.model_validate(res["analysis"]) if res.get("analysis") else None,
         analyst_notes=[_note_out(n) for n in sorted(inv.notes, key=lambda n: n.created_at)],
         limitations=build_limitations(coverage),
+        tlp=inv.tlp or "amber",
+        posture=res.get("posture"),
+        risk=res.get("risk") or [],
+        changes=res.get("changes"),
     )
-    renderer, media_type, ext = RENDERERS[format]
-    content = renderer(data)
+    if format == "stix":
+        content = render_stix(
+            build_stix_bundle(
+                investigation=data.investigation, findings=data.findings, correlation=data.correlation, tlp=data.tlp
+            )
+        )
+        media_type, ext = "application/stix+json;version=2.1", "stix.json"
+    else:
+        renderer, media_type, ext = RENDERERS[format]
+        content = renderer(data)
     audit(
         db,
         actor_id=principal.id,
@@ -468,6 +536,131 @@ def report(
     if format == "html":
         headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; img-src data:"
     return Response(content=content, media_type=media_type, headers=headers)
+
+
+@router.patch("/{inv_id}", response_model=InvestigationOut)
+def update_investigation(
+    inv_id: str,
+    body: InvestigationUpdate,
+    request: Request,
+    principal: Principal = Depends(require(Permission.INVESTIGATION_CREATE)),
+    db: Session = Depends(get_db),
+) -> InvestigationOut:
+    inv = get_inv(db, principal, inv_id, write=True)
+    changes: dict[str, Any] = {}
+    if body.title:
+        inv.title = changes["title"] = body.title
+    if body.tlp:
+        inv.tlp = changes["tlp"] = body.tlp
+    if body.remove_from_case:
+        inv.case_id = None
+        changes["case_id"] = None
+    elif body.case_id:
+        case = db.get(Case, body.case_id)
+        if case is None or (case.created_by != principal.id and principal.role != "admin"):
+            raise HTTPException(status_code=404, detail="case not found")
+        inv.case_id = changes["case_id"] = case.id
+    db.commit()
+    audit(
+        db,
+        actor_id=principal.id,
+        action="investigation.update",
+        target_type="investigation",
+        target_id=inv.id,
+        ip=client_ip(request),
+        details=changes,
+    )
+    return to_out(inv)
+
+
+@router.post("/{inv_id}/pivot", response_model=InvestigationOut, status_code=201)
+def pivot(
+    inv_id: str,
+    body: PivotRequest,
+    request: Request,
+    background: BackgroundTasks,
+    principal: Principal = Depends(require(Permission.INVESTIGATION_CREATE)),
+    db: Session = Depends(get_db),
+) -> InvestigationOut:
+    parent = get_inv(db, principal, inv_id, write=True)
+    child = svc.pivot_investigation(db, parent, body, principal.user, client_ip(request))
+    if body.run:
+        dispatch_investigation(child.id, background)
+    return to_out(child)
+
+
+@router.put("/{inv_id}/monitoring", response_model=InvestigationOut)
+def monitoring(
+    inv_id: str,
+    body: MonitoringUpdate,
+    request: Request,
+    principal: Principal = Depends(require(Permission.INVESTIGATION_CREATE)),
+    db: Session = Depends(get_db),
+) -> InvestigationOut:
+    inv = get_inv(db, principal, inv_id, write=True)
+    return to_out(svc.set_monitoring(db, inv, body.interval_hours, principal.id, client_ip(request)))
+
+
+@router.post("/{inv_id}/findings/bulk")
+def bulk_verify(
+    inv_id: str,
+    body: BulkVerify,
+    request: Request,
+    principal: Principal = Depends(require(Permission.FINDING_VERIFY)),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    inv = get_inv(db, principal, inv_id, write=True)
+    rows = {r.id: r for r in inv.findings}
+    unknown = [fid for fid in body.finding_ids if fid not in rows]
+    if unknown:
+        raise HTTPException(status_code=404, detail=f"{len(unknown)} finding(s) not in this investigation")
+    for fid in body.finding_ids:
+        row = rows[fid]
+        data = row.data
+        data["verification_status"] = body.status
+        row.set_data(data)
+        row.verification_status = body.status
+    if body.note:
+        db.add(
+            AnalystNote(
+                investigation_id=inv.id,
+                finding_id=None,
+                author_id=principal.id,
+                body_enc=encrypt_str(f"[bulk {body.status}: {len(body.finding_ids)} findings] {body.note}") or "",
+            )
+        )
+    db.commit()
+    db.refresh(inv)
+    svc.recompute(db, inv)
+    audit(
+        db,
+        actor_id=principal.id,
+        action="finding.bulk_verify",
+        target_type="investigation",
+        target_id=inv.id,
+        ip=client_ip(request),
+        details={"status": body.status, "count": len(body.finding_ids)},
+    )
+    return {"updated": len(body.finding_ids), "status": body.status}
+
+
+@router.get("/{inv_id}/assessment")
+def assessment(
+    inv_id: str, principal: Principal = Depends(require(Permission.INVESTIGATION_READ)), db: Session = Depends(get_db)
+) -> dict[str, Any]:
+    inv = get_inv(db, principal, inv_id)
+    res = inv.results
+    return {
+        "posture": res.get("posture"),
+        "risk": res.get("risk") or [],
+        "changes": res.get("changes"),
+        "run_history": res.get("run_history") or [],
+        "monitoring": {
+            "interval_hours": inv.monitor_interval_hours,
+            "next_run_at": inv.next_run_at.isoformat() if inv.next_run_at else None,
+            "allowed": inv.subject_kind in svc.MONITORABLE_KINDS,
+        },
+    }
 
 
 @router.delete("/{inv_id}", status_code=204)

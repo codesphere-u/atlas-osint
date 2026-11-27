@@ -43,6 +43,23 @@ class ApiKey(TimestampMixin, Base):
     user: Mapped[User] = relationship()
 
 
+class Case(TimestampMixin, Base):
+    """A case groups related investigations (e.g. an organisation, its domains and pivots)."""
+
+    __tablename__ = "cases"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
+    title: Mapped[str] = mapped_column(String(200))
+    description_enc: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="open", index=True)
+    tlp: Mapped[str] = mapped_column(String(20), default="amber")
+    created_by: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    investigations: Mapped[list[Investigation]] = relationship(back_populates="case")
+
+    @property
+    def description(self) -> str:
+        return decrypt_str(self.description_enc) or ""
+
+
 class Investigation(TimestampMixin, Base):
     __tablename__ = "investigations"
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
@@ -70,6 +87,16 @@ class Investigation(TimestampMixin, Base):
     results_enc: Mapped[str | None] = mapped_column(Text, nullable=True)
     finding_count: Mapped[int] = mapped_column(Integer, default=0)
     confirmed_count: Mapped[int] = mapped_column(Integer, default=0)
+    # v0.2: cases, pivots, TLP, monitoring
+    case_id: Mapped[str | None] = mapped_column(ForeignKey("cases.id", ondelete="SET NULL"), nullable=True, index=True)
+    parent_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    tlp: Mapped[str] = mapped_column(String(20), default="amber")
+    monitor_interval_hours: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    next_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    run_count: Mapped[int] = mapped_column(Integer, default=0)
+    risk_level: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    posture_grade: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    case: Mapped[Case | None] = relationship(back_populates="investigations")
 
     findings: Mapped[list[FindingRow]] = relationship(
         back_populates="investigation", cascade="all, delete-orphan", passive_deletes=True
